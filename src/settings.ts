@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import URLDisplay from './main';
+import URLDisplayPlugin from './main';
 
 export interface URLDisplaySettings {
     myBool: boolean;
@@ -12,9 +12,9 @@ export const DEFAULT_SETTINGS: URLDisplaySettings = {
 }
 
 export class URLDisplaySettingTab extends PluginSettingTab {
-    plugin: URLDisplay;
+    plugin: URLDisplayPlugin;
 
-    constructor(app: App, plugin: URLDisplay) {
+    constructor(app: App, plugin: URLDisplayPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
