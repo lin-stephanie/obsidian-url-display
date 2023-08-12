@@ -4,6 +4,8 @@ import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
 import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN } from './constants'
 import { DEFAULT_SETTINGS, URLDisplaySettings, URLObject } from './constants'
+import { deduplicateObjectArrByuniId } from "./utils";
+
 
 export default class URLDisplayPlugin extends Plugin {
 
@@ -17,6 +19,7 @@ export default class URLDisplayPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
 
 	/* 视图 */
 	// 判断视图是否已经打开，true则添加，false则删除
@@ -47,6 +50,7 @@ export default class URLDisplayPlugin extends Plugin {
 		);
 	}
 
+
 	/* 处理 */
 	#activeNoteContent: string;
 	activeNoteURL: string[];
@@ -71,19 +75,25 @@ export default class URLDisplayPlugin extends Plugin {
 			// 获取URL对象数组
 			for (const url of this.activeNoteURL) {
 				// console.log(url);
-
 				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
 
-				if (unmatch.length ===0 ) {
+				// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
+				if (unmatch.length === 0) {
 					this.activeNoteURLObject.push({ text: "", link: url });
 					continue;
-				} 
+				}
 
+				// 处理情况2："[]()"
 				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
 					if (match.groups) {
 						this.activeNoteURLObject.push({ text: match.groups.text, link: match.groups.link });
 					}
 				}
+			}
+
+			// 去重URL（插件设置）
+			if (this.settings.removeDuplicateURLs) {
+				this.activeNoteURLObject = deduplicateObjectArrByuniId(this.activeNoteURLObject, "link");
 			}
 		}
 	};

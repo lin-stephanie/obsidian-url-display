@@ -15,10 +15,17 @@ export class URLDisplayView extends ItemView {
 	}
     
     async updateDisplay() {
+		/* 添加spin视图 */
+
+
+		/* 无激活笔记提示 */
+
+
+		/* 有激活笔记显示 */
 		// 获取数据
 		await this.plugin.extraceActiveNoteURL()
 		// console.log(this.plugin);
-		// console.log(this.plugin.activeNoteURL);
+		console.log(this.plugin.activeNoteURL);
 		console.log(this.plugin.activeNoteURLObject);
 
 		// 形成视图
