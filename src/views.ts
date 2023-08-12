@@ -15,23 +15,26 @@ export class URLDisplayView extends ItemView {
 	}
     
     async updateDisplay() {
+		// console.log(this.plugin);
+
 		/* 添加spin视图 */
 
-
-		/* 无激活笔记提示 */
-
-
-		/* 有激活笔记显示 */
 		// 获取数据
 		await this.plugin.extraceActiveNoteURL()
-		// console.log(this.plugin);
 		console.log(this.plugin.activeNoteURL);
 		console.log(this.plugin.activeNoteURLObject);
 
 		// 形成视图
-        const container = this.containerEl.children[1];
+		const container = this.containerEl.children[1];
 		container.empty();
-		container.createEl("p", { text: String(this.plugin.activeNoteURL) });
+
+		// 无URL提示
+		if (this.plugin.activeNoteURLObject.length === 0) {
+			container.createEl("p", { text: "No legal URLs found on this note 😄" });
+		// 有URL显示
+		} else {
+			container.createEl("p", { text: String(this.plugin.activeNoteURL) });
+		}
     }
 
 	getViewType() {

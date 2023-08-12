@@ -23,7 +23,7 @@ export default class URLDisplayPlugin extends Plugin {
 
 	/* 视图 */
 	// 判断视图是否已经打开，true则添加，false则删除
-	/* async iSOpen() {
+	/* isOpen = async () => {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
 			this.app.workspace.detachLeavesOfType(VIEW_TYPE)
 		} else {
@@ -38,7 +38,9 @@ export default class URLDisplayPlugin extends Plugin {
 			);
 		}
 	} */
-	async activateView() {
+
+	// 不管视图是否打开
+	activateView = async () => {
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 		await this.app.workspace.getRightLeaf(false).setViewState({
 			type: VIEW_TYPE,
@@ -53,66 +55,53 @@ export default class URLDisplayPlugin extends Plugin {
 
 	/* 处理 */
 	#activeNoteContent: string;
-	activeNoteURL: string[];
-	activeNoteURLObject: URLObject[];
+	activeNoteURL: Array<string>;
+	activeNoteURLObject: Array<URLObject>;
 
 	extraceActiveNoteURL = async () => {
-
 		const activeFile = this.app.workspace.getActiveFile();
+		this.activeNoteURLObject = [];
 
-		// 判断是否为markdown，true则提取URL
-		if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
+		// 获取笔记内容
+		// const md = await this.app.vault.read(activeFile);
+		this.#activeNoteContent = await this.app.vault.cachedRead(activeFile);
 
-			this.activeNoteURLObject = [];
+		// 获取URL字符串数组
+		this.activeNoteURL = this.#activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
 
-			// 获取笔记内容
-			// const md = await this.app.vault.read(activeFile);
-			this.#activeNoteContent = await this.app.vault.cachedRead(activeFile);
+		// 获取URL对象数组
+		for (const url of this.activeNoteURL) {
+			// console.log(url);
+			const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
 
-			// 获取URL字符串数组
-			this.activeNoteURL = this.#activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
-
-			// 获取URL对象数组
-			for (const url of this.activeNoteURL) {
-				// console.log(url);
-				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
-
-				// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
-				if (unmatch.length === 0) {
-					this.activeNoteURLObject.push({ text: "", link: url });
-					continue;
-				}
-
-				// 处理情况2："[]()"
-				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
-					if (match.groups) {
-						this.activeNoteURLObject.push({ text: match.groups.text, link: match.groups.link });
-					}
-				}
+			// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
+			if (unmatch.length === 0) {
+				this.activeNoteURLObject.push({ text: "", link: url });
+				continue;
 			}
 
-			// 去重URL（插件设置）
-			if (this.settings.removeDuplicateURLs) {
-				this.activeNoteURLObject = deduplicateObjectArrByuniId(this.activeNoteURLObject, "link");
+			// 处理情况2："[]()"
+			for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
+				if (match.groups) {
+					this.activeNoteURLObject.push({ text: match.groups.text, link: match.groups.link });
+				}
 			}
+		}
+
+		// 去重URL（插件设置）
+		if (this.settings.removeDuplicateURLs) {
+			this.activeNoteURLObject = deduplicateObjectArrByuniId(this.activeNoteURLObject, "link");
 		}
 	};
 
 
 	async onload() {
-		// console.clear();
-		// console.log(”onload“);
+		console.clear();
+		console.log("loading obsidian-url-display");
 
-		/* 视图 */
-		this.registerView(
-			VIEW_TYPE,
-			(leaf) => new URLDisplayView(leaf, this)
-		);
-
-		/* 功能区 */
-		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
-			this.activateView();
-		});
+		/* 设置 */
+		await this.loadSettings();
+		this.addSettingTab(new URLDisplaySettingTab(this.app, this));
 
 		/* 命令 */
 		this.addCommand({
@@ -123,14 +112,29 @@ export default class URLDisplayPlugin extends Plugin {
 			}
 		});
 
+		/* 视图 */
+		this.registerView(
+			VIEW_TYPE,
+			(leaf) => new URLDisplayView(leaf, this)
+		);
+
+		/* 功能区 */
+		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
+			const activeFile = this.app.workspace.getActiveFile();
+			
+			// 判断是否为.md，true则提取URL，false则不打开视图发出提示
+			if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
+				this.activateView();
+			} else {
+				this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+				new Notice("It needs to be valid in the .md file 😄")
+			}
+		});
+
 		/* 事件 */
 		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
 			// console.log('click', evt);
 		});
-
-		/* 设置 */
-		await this.loadSettings();
-		this.addSettingTab(new URLDisplaySettingTab(this.app, this));
 	}
 
 	onunload() {

@@ -5,7 +5,7 @@
 
 import { URLObject } from './constants'
 
-export function deduplicateObjectArrByuniId(arr: URLObject[], uniId: string): URLObject[] {
+export function deduplicateObjectArrByuniId(arr: Array<URLObject>, uniId: string): Array<URLObject> {
     const res = new Map();
     return arr.filter((item: object) => !res.has(item[uniId]) && res.set(item[uniId], 1));
 }
