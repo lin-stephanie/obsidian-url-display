@@ -1,13 +1,13 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-import type { URLDisplaySettings } from './settings';
-import { DEFAULT_SETTINGS, URLDisplaySettingTab } from './settings'
+import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
-import { VIEW_TYPE } from './constants'
-
+import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN } from './constants'
+import { DEFAULT_SETTINGS, URLDisplaySettings, URLObject } from './constants'
 
 export default class URLDisplayPlugin extends Plugin {
 
+	/* 设置 */
 	settings: URLDisplaySettings;
 
 	async loadSettings() {
@@ -18,8 +18,9 @@ export default class URLDisplayPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	/* 视图 */
 	// 判断视图是否已经打开，true则添加，false则删除
-	async iSOpen() {
+	/* async iSOpen() {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
 			this.app.workspace.detachLeavesOfType(VIEW_TYPE)
 		} else {
@@ -33,7 +34,60 @@ export default class URLDisplayPlugin extends Plugin {
 				this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
 			);
 		}
+	} */
+	async activateView() {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+		await this.app.workspace.getRightLeaf(false).setViewState({
+			type: VIEW_TYPE,
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
+		);
 	}
+
+	/* 处理 */
+	#activeNoteContent: string;
+	activeNoteURL: string[];
+	activeNoteURLObject: URLObject[];
+
+	extraceActiveNoteURL = async () => {
+
+		const activeFile = this.app.workspace.getActiveFile();
+
+		// 判断是否为markdown，true则提取URL
+		if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
+
+			this.activeNoteURLObject = [];
+
+			// 获取笔记内容
+			// const md = await this.app.vault.read(activeFile);
+			this.#activeNoteContent = await this.app.vault.cachedRead(activeFile);
+
+			// 获取URL字符串数组
+			this.activeNoteURL = this.#activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
+
+			// 获取URL对象数组
+			for (const url of this.activeNoteURL) {
+				// console.log(url);
+
+				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
+
+				if (unmatch.length ===0 ) {
+					this.activeNoteURLObject.push({ text: "", link: url });
+					continue;
+				} 
+
+				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
+					if (match.groups) {
+						this.activeNoteURLObject.push({ text: match.groups.text, link: match.groups.link });
+					}
+				}
+			}
+		}
+	};
+
 
 	async onload() {
 		// console.clear();
@@ -42,12 +96,12 @@ export default class URLDisplayPlugin extends Plugin {
 		/* 视图 */
 		this.registerView(
 			VIEW_TYPE,
-			(leaf) => new URLDisplayView(leaf)
+			(leaf) => new URLDisplayView(leaf, this)
 		);
 
 		/* 功能区 */
 		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
-			this.iSOpen();
+			this.activateView();
 		});
 
 		/* 命令 */
@@ -55,7 +109,7 @@ export default class URLDisplayPlugin extends Plugin {
 			id: 'open-url-panel',
 			name: 'Open URL Panel',
 			callback: () => {
-				this.iSOpen();
+				this.activateView();
 			}
 		});
 

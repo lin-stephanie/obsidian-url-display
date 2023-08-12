@@ -1,21 +1,30 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, WorkspaceLeaf, ItemView } from 'obsidian';
 
+import URLDisplayPlugin from "./main";
 import { VIEW_TYPE } from './constants'
-
 
 export class URLDisplayView extends ItemView {
 
-    singleNoteURL = [];
+    singleNoteURL: string[];
 
-	constructor(leaf: WorkspaceLeaf) {
+	plugin: URLDisplayPlugin;
+
+	constructor(leaf: WorkspaceLeaf, plugin: URLDisplayPlugin) {
 		super(leaf);
+		this.plugin = plugin;
 	}
     
-    updateDisplay() {
+    async updateDisplay() {
+		// 获取数据
+		await this.plugin.extraceActiveNoteURL()
+		// console.log(this.plugin);
+		// console.log(this.plugin.activeNoteURL);
+		console.log(this.plugin.activeNoteURLObject);
+
+		// 形成视图
         const container = this.containerEl.children[1];
 		container.empty();
-        
-		container.createEl("h4", { text: "Example view" });
+		container.createEl("p", { text: String(this.plugin.activeNoteURL) });
     }
 
 	getViewType() {
