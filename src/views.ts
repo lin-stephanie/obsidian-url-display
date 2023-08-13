@@ -1,19 +1,16 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, WorkspaceLeaf, ItemView } from 'obsidian';
+import { WorkspaceLeaf, ItemView } from 'obsidian';
 
 import URLDisplayPlugin from "./main";
 import { VIEW_TYPE } from './constants'
 
 export class URLDisplayView extends ItemView {
-
-    singleNoteURL: string[];
-
-	plugin: URLDisplayPlugin;
+	private readonly plugin: URLDisplayPlugin;
 
 	constructor(leaf: WorkspaceLeaf, plugin: URLDisplayPlugin) {
 		super(leaf);
 		this.plugin = plugin;
 	}
-    
+
     async updateDisplay() {
 		// console.log(this.plugin);
 

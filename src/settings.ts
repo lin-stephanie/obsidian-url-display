@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting } from 'obsidian';
 import URLDisplayPlugin from './main';
 
 export class URLDisplaySettingTab extends PluginSettingTab {

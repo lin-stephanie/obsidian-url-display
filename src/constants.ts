@@ -1,4 +1,4 @@
-export const VIEW_TYPE = "url-display-view";
+export const VIEW_TYPE = "url-display";
 
 /* eslint-disable no-useless-escape */
 
