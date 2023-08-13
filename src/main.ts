@@ -1,16 +1,20 @@
 import { MarkdownView, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 
+import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS } from './constants'
+import type { URLDisplaySettings, URLObject } from './constants'
 import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
-import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS, URLDisplaySettings, URLObject } from './constants'
 import { deduplicateObjectArrByuniId } from "./utils";
 
 
 export default class URLDisplayPlugin extends Plugin {
+	settings: URLDisplaySettings;
+	view: URLDisplayView;
+	#activeNoteContent: string;
+	activeNoteURL: string[];
+	activeNoteURLObject: URLObject[];
 
 	/* 设置 */
-	settings: URLDisplaySettings;
-
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
@@ -21,6 +25,19 @@ export default class URLDisplayPlugin extends Plugin {
 
 
 	/* 视图 */
+	// 不管视图是否打开
+	activateView = async () => {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+		await this.app.workspace.getRightLeaf(false).setViewState({
+			type: VIEW_TYPE,
+			active: true,
+		});
+
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
+		);
+	}
+
 	// 判断视图是否已经打开，true则添加，false则删除
 	/* isOpen = async () => {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
@@ -38,27 +55,9 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	} */
 
-	// 不管视图是否打开
-	activateView = async () => {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-		await this.app.workspace.getRightLeaf(false).setViewState({
-			type: VIEW_TYPE,
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
-		);
-	}
-
 
 	/* 功能区 */
-	#activeNoteContent: string;
-	activeNoteURL: Array<string>;
-	activeNoteURLObject: Array<URLObject>;
-
 	extraceActiveNoteURL = async () => {
-		console.log("extraceActiveNoteURL");
 		this.activeNoteURLObject = [];
 		const activeFile = this.app.workspace.getActiveFile();
 
@@ -96,12 +95,20 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	};
 
-	updateView = async (avtiveLeaf: WorkspaceLeaf | null) => {
-		if (avtiveLeaf && avtiveLeaf.getViewState().type == "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-			console.log(avtiveLeaf);
-			console.log(this.app.workspace.getLeavesOfType(VIEW_TYPE)[0].view);
-			// const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0].view
-		} 
+	updateView = (avtiveLeaf: WorkspaceLeaf | null) => {
+		/* if (avtiveLeaf) {
+			console.log(avtiveLeaf.getViewState().type);
+		} */
+
+		if (avtiveLeaf && avtiveLeaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+			// console.log(this.app.workspace.getLeavesOfType(VIEW_TYPE)[0].view);
+			this.view.updateDisplay();
+		}
+		// 当激活页不是md时，控制是否要关闭视图
+		// if (avtiveLeaf && avtiveLeaf.getViewState().type !== "markdown" && avtiveLeaf.getViewState().type !== "url-display" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+		// 	this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+		// 	new Notice("It needs to work in active markdown view 😄");
+		// }
 	}
 
 
@@ -125,15 +132,15 @@ export default class URLDisplayPlugin extends Plugin {
 		/* 视图 */
 		this.registerView(
 			VIEW_TYPE,
-			(leaf) => new URLDisplayView(leaf, this)
+			(leaf) => (this.view = new URLDisplayView(leaf, this)),
 		);
 
 		/* 功能区 */
 		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
 
-			this.app.workspace.iterateAllLeaves((leaf) => {
+			/* this.app.workspace.iterateAllLeaves((leaf) => {
 				console.log(leaf.getViewState().type);
-			});
+			}); */
 
 			// 判断是否为.md，true则提取URL，false则不打开视图发出提示
 			// const activeFile = this.app.workspace.getActiveFile();
@@ -142,14 +149,13 @@ export default class URLDisplayPlugin extends Plugin {
 				this.activateView();
 			} else {
 				this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-				new Notice("It needs to work in active markdown view 😄")
+				new Notice("It needs to work in active markdown view 😄");
 			}
 		});
-		
+
 		/* 事件 */
-		// needed for multi-pane support when users change between them
 		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
-			console.log("active-leaf-change");
+			// console.log("active-leaf-change");
 			this.updateView(leaf);
 		}));
 	}

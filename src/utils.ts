@@ -3,7 +3,7 @@
     changeCollapse: (args: string[]) => void
 } */
 
-import { URLObject } from './constants'
+import type { URLObject } from './constants'
 
 export function deduplicateObjectArrByuniId(arr: Array<URLObject>, uniId: string): Array<URLObject> {
     const res = new Map();

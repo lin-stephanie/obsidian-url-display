@@ -18,7 +18,7 @@ export class URLDisplayView extends ItemView {
 
 		// 获取数据
 		await this.plugin.extraceActiveNoteURL()
-		console.log(this.plugin.activeNoteURL);
+		// console.log(this.plugin.activeNoteURL);
 		console.log(this.plugin.activeNoteURLObject);
 
 		// 形成视图
