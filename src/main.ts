@@ -100,15 +100,15 @@ export default class URLDisplayPlugin extends Plugin {
 			console.log(avtiveLeaf.getViewState().type);
 		} */
 
-		if (avtiveLeaf && avtiveLeaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+		if (avtiveLeaf && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
 			// console.log(this.app.workspace.getLeavesOfType(VIEW_TYPE)[0].view);
 			this.view.updateDisplay();
 		}
 		// 当激活页不是md时，控制是否要关闭视图
-		// if (avtiveLeaf && avtiveLeaf.getViewState().type !== "markdown" && avtiveLeaf.getViewState().type !== "url-display" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-		// 	this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-		// 	new Notice("It needs to work in active markdown view 😄");
-		// }
+		/* if (avtiveLeaf && avtiveLeaf.getViewState().type !== "markdown" && avtiveLeaf.getViewState().type !== "url-display" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+			new Notice("It needs to work in active markdown view 😄");
+		} */
 	}
 
 
