@@ -31,9 +31,7 @@ export abstract class Parser {
 		url: string;
 	}> {
 		const rawData = await this.parseUrl(url);
-		if (this.debug) {
-			console.log('rawData', rawData);
-		}
+		console.log('rawData', rawData);
 		return { ...this.process(rawData), url};
 	}
 }

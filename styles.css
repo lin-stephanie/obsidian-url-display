@@ -6,3 +6,36 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+a,
+a:link,
+a:visited,
+a:hover,
+a:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+.url-display-item {
+    padding-left: 8px;
+}
+
+.url-display-item:hover {
+    cursor: pointer;
+}
+
+.url-display-content {
+    display: flex;
+    align-items: center;
+}
+
+.url-display-content-img {
+    width: 20px;
+    height: 100%;
+    /* border-radius: 50%; */
+}
+
+.url-display-content-text {
+    padding-left: 8px;
+}
+

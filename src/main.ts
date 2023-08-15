@@ -93,7 +93,7 @@ export default class URLDisplayPlugin extends Plugin {
 				// console.log(url);
 				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
 
-				// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
+				// 处理情况1："https://obsidian.md/"（当不匹配时unmatch是一个空数组）
 				if (unmatch.length === 0) {
 					this.activeNoteURLExtract.push({ text: "", link: url });
 					continue;
@@ -115,16 +115,18 @@ export default class URLDisplayPlugin extends Plugin {
 	}
 
 	parseActiveNoteURL = async(URLExtract: URLExtract[]): Promise<void> => {
-		this.activeNoteURLParse = [];
+		// 确定解析器
 		const parser = parsers["microlink"];
+		this.activeNoteURLParse = [];
 
+		// 获取元数据
 		for (const extractObject of URLExtract){
-			const parseObject = Object.assign(extractObject);
+			const parseObject = {...extractObject} as URLParse;
 			try {
 				console.log('parseURL');
 				const data = await parser.parse(extractObject.link);
 				parseObject.title = data.title.replace(/"/g, '\\"');
-				parseObject.favicon = data.logo.replace(/"/g, '\\"');
+				parseObject.logo = data.logo;
 				parseObject.description = data.description.replace(/"/g, '\\"');
 				this.activeNoteURLParse.push(parseObject)
 			} catch (error) {
