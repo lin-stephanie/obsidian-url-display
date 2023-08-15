@@ -16,7 +16,15 @@ export const DEFAULT_SETTINGS: URLDisplaySettings = {
     showFavicon: true,
 }
 
-export interface URLObject {
+export interface URLExtract {
     text: string;
     link: string;
+}
+
+export interface URLParse {
+    text: string;
+    link: string;
+    title: string;
+    logo: string;
+    description: string;
 }

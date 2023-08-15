@@ -1,18 +1,21 @@
 import { MarkdownView, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 
 import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS } from './constants'
-import type { URLDisplaySettings, URLObject } from './constants'
+import type { URLDisplaySettings, URLExtract, URLParse } from './constants'
 import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
 import { deduplicateObjectArrByuniId } from "./utils";
+import { parsers } from "./parser";
 
 
 export default class URLDisplayPlugin extends Plugin {
 	settings: URLDisplaySettings;
 	view: URLDisplayView;
-	#activeNoteContent: string;
+	activeNoteContent: string;
 	activeNoteURL: string[];
-	activeNoteURLObject: URLObject[];
+	activeNoteURLExtract: URLExtract[];
+	activeNoteURLParse: URLParse[];
+
 
 	/* 设置 */
 	async loadSettings() {
@@ -55,47 +58,7 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	} */
 
-
-	/* 功能区 */
-	extraceActiveNoteURL = async () => {
-		this.activeNoteURLObject = [];
-		const activeFile = this.app.workspace.getActiveFile();
-
-		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
-			// 获取笔记内容
-			// const md = await this.app.vault.read(activeFile);
-			this.#activeNoteContent = await this.app.vault.cachedRead(activeFile);
-
-			// 获取URL字符串数组
-			this.activeNoteURL = this.#activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
-
-			// 获取URL对象数组
-			for (const url of this.activeNoteURL) {
-				// console.log(url);
-				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
-
-				// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
-				if (unmatch.length === 0) {
-					this.activeNoteURLObject.push({ text: "", link: url });
-					continue;
-				}
-
-				// 处理情况2："[]()"
-				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
-					if (match.groups) {
-						this.activeNoteURLObject.push({ text: match.groups.text, link: match.groups.link });
-					}
-				}
-			}
-
-			// 去重URL（插件设置）
-			if (this.settings.removeDuplicateURLs) {
-				this.activeNoteURLObject = deduplicateObjectArrByuniId(this.activeNoteURLObject, "link");
-			}
-		}
-	};
-
-	updateView = (avtiveLeaf: WorkspaceLeaf | null) => {
+	updateView = (avtiveLeaf: WorkspaceLeaf | null): void => {
 		/* if (avtiveLeaf) {
 			console.log(avtiveLeaf.getViewState().type);
 		} */
@@ -111,6 +74,65 @@ export default class URLDisplayPlugin extends Plugin {
 		} */
 	}
 
+
+	/* 处理 */
+	extraceActiveNoteURL = async () :Promise<void> => {
+		this.activeNoteURLExtract = [];
+		const activeFile = this.app.workspace.getActiveFile();
+
+		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
+			// 获取笔记内容
+			// const md = await this.app.vault.read(activeFile);
+			this.activeNoteContent = await this.app.vault.cachedRead(activeFile);
+
+			// 获取URL字符串数组
+			this.activeNoteURL = this.activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
+
+			// 获取URL对象数组
+			for (const url of this.activeNoteURL) {
+				// console.log(url);
+				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
+
+				// 处理情况1："https://obsidian.md/"（当不匹配时解构为数组时是一个空数组）
+				if (unmatch.length === 0) {
+					this.activeNoteURLExtract.push({ text: "", link: url });
+					continue;
+				}
+
+				// 处理情况2："[]()"
+				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
+					if (match.groups) {
+						this.activeNoteURLExtract.push({ text: match.groups.text, link: match.groups.link });
+					}
+				}
+			}
+
+			// 去重URL（插件设置）
+			if (this.settings.removeDuplicateURLs) {
+				this.activeNoteURLExtract = deduplicateObjectArrByuniId(this.activeNoteURLExtract, "link");
+			}
+		}
+	}
+
+	parseActiveNoteURL = async(URLExtract: URLExtract[]): Promise<void> => {
+		this.activeNoteURLParse = [];
+		const parser = parsers["microlink"];
+
+		for (const extractObject of URLExtract){
+			const parseObject = Object.assign(extractObject);
+			try {
+				console.log('parseURL');
+				const data = await parser.parse(extractObject.link);
+				parseObject.title = data.title.replace(/"/g, '\\"');
+				parseObject.favicon = data.logo.replace(/"/g, '\\"');
+				parseObject.description = data.description.replace(/"/g, '\\"');
+				this.activeNoteURLParse.push(parseObject)
+			} catch (error) {
+				console.log('error', error);
+				new Notice(`Failed to fetch data`);
+			}
+		}
+	}
 
 	async onload() {
 		console.clear();
