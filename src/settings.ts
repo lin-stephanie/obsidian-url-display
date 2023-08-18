@@ -26,12 +26,12 @@ export class URLDisplaySettingTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName('Use text in bracket')
+            .setName('Use alias in bracket')
             .setDesc('***')
             .addToggle(value => value
-                .setValue(this.plugin.settings.useTextInBracket)
+                .setValue(this.plugin.settings.useAliasInBracket)
                 .onChange((value) => {
-                    this.plugin.settings.useTextInBracket = value;
+                    this.plugin.settings.useAliasInBracket = value;
                     this.plugin.saveSettings();
                 })
             );

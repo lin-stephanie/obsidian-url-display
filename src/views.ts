@@ -24,7 +24,7 @@ export class URLDisplayView extends ItemView {
 	}
 
 	async onOpen() {
-		await this.plugin.updateURL();
+		this.plugin.updateURL();
 	}
 
 	public readonly updateDisplay = () => {
