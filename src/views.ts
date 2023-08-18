@@ -15,7 +15,46 @@ export class URLDisplayView extends ItemView {
 		return 'external-link';
 	}
 
-	public readonly update = async (): Promise<void> => {
+	getViewType() {
+		return VIEW_TYPE;
+	}
+
+	getDisplayText() {
+		return "URL Display view";
+	}
+
+	async onOpen() {
+		await this.plugin.updateURL();
+	}
+
+	public readonly updateDisplay = () => {
+		console.log("start updateDisplay")
+		const container = this.containerEl.children[1];
+		container.empty();
+
+		if (this.plugin.isExtracting) {
+			console.log("isExtracting")
+			container.createEl("p", { text: "isExtracting..." });
+		}
+
+		if (!this.plugin.isExtracting && !this.plugin.activeNotehaveURL) {
+			console.log("null activeNotehaveURL")
+			container.createEl("p", { text: "No legal URLs found on this note 😄" });
+		}
+
+		if (this.plugin.isParsing) {
+			console.log("isParsing")
+			container.empty();
+			container.createEl("p", { text: "isParsing..." });
+		}
+
+		if (!this.plugin.isParsing && this.plugin.activeNoteURLParse && !(this.plugin.activeNoteURLParse.length === 0)) {
+			this.updateList();
+		}
+	}
+
+	public readonly updateList = async (): Promise<void> => {
+		console.log("start updateList")
 
 		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
 		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
@@ -30,12 +69,12 @@ export class URLDisplayView extends ItemView {
 			// const navFileTitleContent = navFileTitle.createDiv({ cls: 'tree-item-inner nav-file-title-content recent-files-title-content' });
 			const navURLHrefContent = navURLItem.createEl("a", { cls: 'tree-item-inner nav-file-title-content url-display-content' });
 			navURLHrefContent.setAttribute("href", currentURL.link);
-			
+
 			const navURLHrefContentImg = navURLHrefContent.createEl('img', { cls: 'url-display-content-img' });
 			navURLHrefContentImg.setAttribute("src", currentURL.logo);
 
 			navURLHrefContent.createEl("span", {
-				text: this.plugin.settings.useTextInBracket && currentURL.text.trim() !== "" ? currentURL.text : currentURL.title,
+				text: this.plugin.settings.useAliasInBracket && currentURL.alias.trim() !== "" ? currentURL.alias : currentURL.title,
 				cls: 'url-display-content-text',
 			});
 		})
@@ -45,52 +84,35 @@ export class URLDisplayView extends ItemView {
 		container.appendChild(rootEl);
 	}
 
-	async updateDisplay() {
-
-		// 更新数据
-		await this.plugin.extraceActiveNoteURL();
-		console.log(this.plugin.activeNoteURLExtract);
-
-		if (this.plugin.activeNoteURLExtract.length === 0) {
-			const container = this.containerEl.children[1];
-			container.empty();
-			container.createEl("p", { text: "No legal URLs found on this note 😄" });
-		}
-
-		// 显示进度
-
-		// 更新UI
-		await this.plugin.parseActiveNoteURL(this.plugin.activeNoteURLExtract);
-		console.log(this.plugin.activeNoteURLParse);
-
-		this.update();
-
-
-		/* // 形成视图
-		const container = this.containerEl.children[1];
-		container.empty();
-		// 无URL提示
-		if (this.plugin.activeNoteURLParse.length === 0) {
-			container.createEl("p", { text: "No legal URLs found on this note 😄" });
-		// 有URL显示
-		} else {
-			container.createEl("p", { text: String(this.plugin.activeNoteURLParse) });
-		} */
-	}
-
-	getViewType() {
-		return VIEW_TYPE;
-	}
-
-	getDisplayText() {
-		return "URL Display view";
-	}
-
-	async onOpen() {
-		this.updateDisplay();
-	}
-
 	async onClose() {
 		// Nothing to clean up.
 	}
 }
+
+// 	async updateDisplay() {
+// 		if (!this.plugin.activeNotehaveURL) {
+// 			const container = this.containerEl.children[1];
+// 			container.empty();
+// 			container.createEl("p", { text: "No legal URLs found on this note 😄" });
+// 		}
+
+// 		// 显示进度
+
+// 		// 更新UI
+// 		// await this.plugin.parseActiveNoteURL(this.plugin.activeNoteURLExtract);
+// 		// console.log(this.plugin.activeNoteURLParse);
+
+// 		// this.update();
+
+
+// 		// 形成视图
+// 		const container = this.containerEl.children[1];
+// 		container.empty();
+// 		// 无URL提示
+// 		if (this.plugin.activeNoteURLParse.length === 0) {
+// 			container.createEl("p", { text: "No legal URLs found on this note 😄" });
+// 		// 有URL显示
+// 		} else {
+// 			container.createEl("p", { text: String(this.plugin.activeNoteURLParse) });
+// 		}
+// }

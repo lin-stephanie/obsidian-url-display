@@ -5,7 +5,7 @@
 
 import type { URLExtract } from './constants'
 
-export function deduplicateObjectArrByuniId(arr: Array<URLExtract>, uniId: string): Array<URLExtract> {
+export function deduplicateObjArrByUniId(arr: Array<URLExtract>, uniId: string): Array<URLExtract> {
     const res = new Map();
     return arr.filter((item: object) => !res.has(item[uniId]) && res.set(item[uniId], 1));
 }

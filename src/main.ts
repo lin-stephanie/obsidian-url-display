@@ -1,62 +1,22 @@
 import { MarkdownView, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 
 import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS } from './constants'
-import type { URLDisplaySettings, URLExtract, URLParse } from './constants'
+import type { URLDisplaySettings, URLParse } from './constants'
 import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
-import { deduplicateObjectArrByuniId } from "./utils";
+import { deduplicateObjArrByUniId } from "./utils";
 import { parsers } from "./parser";
 
 
 export default class URLDisplayPlugin extends Plugin {
-	settings: URLDisplaySettings;
-	view: URLDisplayView;
-	activeNoteContent: string;
-	activeNoteURL: string[];
-	activeNoteURLExtract: URLExtract[];
-	activeNoteURLParse: URLParse[];
 
+	public settings: URLDisplaySettings;
+	public view: URLDisplayView;
+	public activeNotehaveURL: boolean | undefined;
+	public activeNoteURLParse: URLParse[];
 
-	/* 设置 */
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-
-
-	/* 视图 */
-	// 不管视图是否打开
-	activateView = async () => {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-		await this.app.workspace.getRightLeaf(false).setViewState({
-			type: VIEW_TYPE,
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
-		);
-	}
-
-	// 判断视图是否已经打开，true则添加，false则删除
-	/* isOpen = async () => {
-		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE)
-		} else {
-			// 添加叶子节点到工作区
-			await this.app.workspace.getRightLeaf(false).setViewState({
-				type: VIEW_TYPE,
-				active: true,
-			});
-			// 显示叶子节点
-			this.app.workspace.revealLeaf(
-				this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
-			);
-		}
-	} */
+	public isExtracting: boolean | undefined;
+	public isParsing: boolean | undefined;
 
 	updateView = (avtiveLeaf: WorkspaceLeaf | null): void => {
 		/* if (avtiveLeaf) {
@@ -74,117 +34,172 @@ export default class URLDisplayPlugin extends Plugin {
 		} */
 	}
 
-
-	/* 处理 */
-	extraceActiveNoteURL = async () :Promise<void> => {
-		this.activeNoteURLExtract = [];
-		const activeFile = this.app.workspace.getActiveFile();
-
-		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
-			// 获取笔记内容
-			// const md = await this.app.vault.read(activeFile);
-			this.activeNoteContent = await this.app.vault.cachedRead(activeFile);
-
-			// 获取URL字符串数组
-			this.activeNoteURL = this.activeNoteContent.match(EXTERNAL_URL_PATTERN) || [];
-
-			// 获取URL对象数组
-			for (const url of this.activeNoteURL) {
-				// console.log(url);
-				const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
-
-				// 处理情况1："https://obsidian.md/"（当不匹配时unmatch是一个空数组）
-				if (unmatch.length === 0) {
-					this.activeNoteURLExtract.push({ text: "", link: url });
-					continue;
-				}
-
-				// 处理情况2："[]()"
-				for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
-					if (match.groups) {
-						this.activeNoteURLExtract.push({ text: match.groups.text, link: match.groups.link });
-					}
-				}
-			}
-
-			// 去重URL（插件设置）
-			if (this.settings.removeDuplicateURLs) {
-				this.activeNoteURLExtract = deduplicateObjectArrByuniId(this.activeNoteURLExtract, "link");
-			}
-		}
-	}
-
-	parseActiveNoteURL = async(URLExtract: URLExtract[]): Promise<void> => {
-		// 确定解析器
-		const parser = parsers["microlink"];
-		this.activeNoteURLParse = [];
-
-		// 获取元数据
-		for (const extractObject of URLExtract){
-			const parseObject = {...extractObject} as URLParse;
-			try {
-				console.log('parseURL');
-				const data = await parser.parse(extractObject.link);
-				parseObject.title = data.title.replace(/"/g, '\\"');
-				parseObject.logo = data.logo;
-				parseObject.description = data.description.replace(/"/g, '\\"');
-				this.activeNoteURLParse.push(parseObject)
-			} catch (error) {
-				console.log('error', error);
-				new Notice(`Failed to fetch data`);
-			}
-		}
-	}
-
-	async onload() {
+	public override async onload() {
 		console.clear();
-		console.log("loading obsidian-url-display");
+		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
-		/* 设置 */
 		await this.loadSettings();
 		this.addSettingTab(new URLDisplaySettingTab(this.app, this));
 
-		/* 命令 */
-		this.addCommand({
-			id: 'open-url-panel',
-			name: 'Open URL Panel',
-			callback: () => {
-				this.activateView();
-			}
-		});
-
-		/* 视图 */
 		this.registerView(
 			VIEW_TYPE,
 			(leaf) => (this.view = new URLDisplayView(leaf, this)),
 		);
 
-		/* 功能区 */
 		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
+			this.isOpen();
+		});
 
-			/* this.app.workspace.iterateAllLeaves((leaf) => {
-				console.log(leaf.getViewState().type);
-			}); */
-
-			// 判断是否为.md，true则提取URL，false则不打开视图发出提示
-			// const activeFile = this.app.workspace.getActiveFile();
-			// if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
-			if (this.app.workspace.getActiveViewOfType(MarkdownView)) {
-				this.activateView();
-			} else {
-				this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-				new Notice("It needs to work in active markdown view 😄");
+		this.addCommand({
+			id: 'open-url-panel',
+			name: 'Open URL Panel',
+			callback: () => {
 			}
 		});
 
-		/* 事件 */
 		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
 			// console.log("active-leaf-change");
-			this.updateView(leaf);
+			// this.updateView(leaf);
 		}));
 	}
 
-	onunload() {
+	public async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	public async saveSettings() {
+		await this.saveData(this.settings);
+	}
+
+	private readonly isOpen = () => {
+		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE)
+		} else {
+			this.isMarkdownView();
+		}
+	}
+
+	private readonly isMarkdownView = async () => {
+		// const activeFile = this.app.workspace.getActiveFile();
+		// if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
+		if (this.app.workspace.getActiveViewOfType(MarkdownView)) {
+			console.log("is MarkdownView");
+			this.initState();
+			this.activateView();
+			
+		} else {
+			// this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+			console.log("no MarkdownView");
+			new Notice("It needs to work in active markdown view 😅");
+		}
+	}
+
+	private readonly initState = () => {
+		this.activeNotehaveURL = undefined;
+		this.isExtracting = undefined;
+		this.isParsing = undefined;
+		this.activeNoteURLParse = [];
+	}
+
+	private readonly activateView = async () => {
+		console.log("start activateView");
+
+		const leaf = this.app.workspace.getRightLeaf(false);
+		await leaf.setViewState({ type: VIEW_TYPE });
+		this.app.workspace.revealLeaf(leaf);
+		/* await this.app.workspace.getRightLeaf(false).setViewState({
+			type: VIEW_TYPE,
+			active: true,
+		});
+		this.app.workspace.revealLeaf(
+			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
+		);
+		 */
+
+		console.log("end activateView");
+	}
+
+	public readonly updateURL = async () => {
+		console.log("start updateURL")
+		const activeNoteURL = await this.extractURL();
+		console.log("end extractURL")
+		this.isExtracting = false;
+
+		if (activeNoteURL.length === 0) {
+			this.activeNotehaveURL = false;
+			this.view.updateDisplay();
+		} else {
+			this.activeNotehaveURL = true;
+			await this.parseURL(activeNoteURL);
+			this.view.updateDisplay();
+		}
+
+		console.log("end updateURL")
+	}
+
+	private readonly extractURL = async (): Promise<string[]> => {
+		console.log("start extractURL")
+		this.isExtracting = true;
+		const activeFile = this.app.workspace.getActiveFile();
+
+		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
+			// const md = await this.app.vault.read(activeFile);
+			const activeFilContent = await this.app.vault.cachedRead(activeFile);
+			return activeFilContent.match(EXTERNAL_URL_PATTERN) || [];
+		} else {
+			return []
+		}
+	}
+
+	private readonly parseURL = async (activeNoteURL: string[]) => {
+		console.log("start parseURL")
+		this.isParsing = true;
+		this.view.updateDisplay();
+
+		this.activeNoteURLParse = this.convertToObject(activeNoteURL);
+		const parser = parsers["microlink"];
+
+		for (const URLObject of this.activeNoteURLParse) {
+			try {
+				console.log('parseURL');
+				const data = await parser.parse(URLObject.link);
+				URLObject.title = data.title.replace(/"/g, '\\"');
+				URLObject.logo = data.logo;
+				URLObject.description = data.description.replace(/"/g, '\\"');
+			} catch (error) {
+				console.log('error', error);
+				new Notice(`Failed to fetch data`);
+			}
+		}
+		this.isParsing = false;
+		console.log("end parseURL")
+	}
+
+	private readonly convertToObject = (activeNoteURL: string[]): URLParse[] => {
+		let urlObject = [];
+		for (const url of activeNoteURL) {
+			// console.log(url);
+			const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
+
+			// case1："https://obsidian.md/"（unmatch is an empty array）
+			if (unmatch.length === 0) {
+				urlObject.push({ alias: "", link: url,  });
+				continue;
+			}
+			// case1："[]()"
+			for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
+				if (match.groups) {
+					urlObject.push({ alias: match.groups.alias, link: match.groups.link });
+				}
+			}
+		}
+		if (this.settings.removeDuplicateURLs) {
+			urlObject = deduplicateObjArrByUniId(urlObject, "link");
+		}
+		return urlObject;
+	}
+
+
+	override onunload() {
+	}
 }
