@@ -1,5 +1,4 @@
 import { WorkspaceLeaf, ItemView } from 'obsidian';
-
 import URLDisplayPlugin from "./main";
 import { VIEW_TYPE } from './constants'
 

@@ -1,61 +1,107 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * Modified from https://github.com/Seraphli/obsidian-link-embed/blob/main/parser.ts
+ * Referenced and modified from:
+ * https://github.com/Seraphli/obsidian-link-embed/blob/main/parser.ts 
+ * https://github.com/joethei/obsidian-link-favicon/blob/master/src/IconAdder.ts
  */
 
-import { requestUrl } from "obsidian";
+import { requestUrl, arrayBufferToBase64 } from "obsidian";
 import Mustache from 'mustache';
+import ls from "localstorage-slim";
+
 import type { ResponseData } from './constants'
-import { getEncodedIcon, saveEncodedIcon } from "./utils";
 
-export abstract class Parser {
+abstract class Parser {
 	public api: string;
+	public readonly cacheMode: string;
 
-	public abstract process(data: ResponseData): {
-		title: string;
-		icon: string;
-	};
+	constructor(cacheMode: string) {
+		this.cacheMode = cacheMode;
+	}
+
+	public abstract process(data: ResponseData, url: string): Promise<{ title: string; icon: string}>;
 
 	public async parse(url: string): Promise<{ title: string; icon: string }> {
 		console.log('fetching', url);
-
 		const requestAPI = Mustache.render(this.api, { url });
 		const res = await requestUrl({ url: requestAPI });
 		const data = res.json;
 		console.log('res', data);
 
-		return { ...this.process(data) };
+		return { ...await this.process(data, url) };
+	}
+
+	public static async getEncodedIcon(url: string): Promise<string> {
+		const hostname = new URL(url).hostname;
+		const name = "icon-" + hostname;
+		const icon = ls.get<string>(name);
+		if (icon) {
+			return icon;
+		}
+		return '';
+	}
+
+	public static async saveEncodedIcon(icon: string, url: string): Promise<string> {
+		const hostname = new URL(url).hostname;
+		const name = "icon-" + hostname;
+		const request = await requestUrl({ url: icon });
+		const iconBase64 = "data:image/png;base64," + arrayBufferToBase64(request.arrayBuffer);
+		ls.set<string>(name, iconBase64, { ttl: 30 * 24 * 60 * 60 });
+
+		return iconBase64;
 	}
 }
 
-class JSONLinkParser extends Parser {
-	constructor() {
-		super();
+export class JSONLinkParser extends Parser {
+	constructor(cacheMode: string) {
+		super(cacheMode);
 		this.api = 'https://jsonlink.io/api/extract?url={{{url}}}';
 	}
-	public override process(data: any): { title: string; icon: string } {
-		const title = data.title || '';
-		const icon = data.images[0] || '';
+
+	public override async process(data: any, url: string): Promise<{ title: string; icon: string}> {
+		const title = (data.title || '');
+		let icon = data.images[0] || '';
+
 		console.log('icon', icon);
+		if (this.cacheMode === "memoryCache") {
+			console.log("start memoryCache");
+			let iconBase64 = await Parser.getEncodedIcon(url);
+			if (iconBase64.trim() === "") {
+				iconBase64 = await Parser.saveEncodedIcon(icon, url);
+			}
+			icon = iconBase64;
+		}
+
 		return { title, icon };
 	}
 }
 
-class MicroLinkParser extends Parser {
-	constructor() {
-		super();
+export class MicroLinkParser extends Parser {
+	constructor(cacheMode: string) {
+		super(cacheMode);
 		this.api = 'https://api.microlink.io?url={{{url}}}&palette=true&audio=true&video=true&iframe=true';
 	}
-	public override process(data: any): { title: string; icon: string } {
+
+	public override async process(data: any, url: string): Promise<{ title: string; icon: string}> {
 		const title = data.data.title || '';
-		const icon = data.data.logo?.url || data.data.image?.url || '';
+		let icon = data.data.logo?.url || data.data.image?.url || '';
+
 		console.log('icon', icon);
+		if (this.cacheMode === "memoryCache") {
+			console.log("start memoryCache");
+			let iconBase64 = await Parser.getEncodedIcon(url);
+			if (iconBase64.trim() === "") {
+				iconBase64 = await Parser.saveEncodedIcon(icon, url);
+			}
+			icon = iconBase64;
+		}
+
 		return { title, icon };
 	}
 }
 
-class LocalParser extends Parser {
-	public process(data: ResponseData): { title: string; icon: string; } {
+export class LocalParser extends Parser {
+	public process(data: ResponseData): Promise<{ title: string; icon: string; }> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -64,10 +110,12 @@ class LocalParser extends Parser {
 		if (element instanceof HTMLMetaElement) {
 			return element.content;
 		}
+
 		element = doc.querySelector('head title');
 		if (element instanceof HTMLTitleElement) {
-			return element.textContent ? element.textContent: '';
-		} 
+			return element.textContent ? element.textContent : '';
+		}
+
 		return ''
 	}
 
@@ -76,16 +124,16 @@ class LocalParser extends Parser {
 		if (element instanceof HTMLLinkElement) {
 			return element.href;
 		}
+
 		element = doc.querySelector('head link[rel="shortcut icon"]');
 		if (element instanceof HTMLLinkElement) {
 			return element.href;
 		}
+
 		return '';
 	}
 
 	public override async parse(url: string): Promise<{ title: string; icon: string }> {
-		console.log("localurl", url);
-
 		const html = await requestUrl({ url: url });
 		const text = html.text;
 		const parser = new DOMParser();
@@ -93,18 +141,21 @@ class LocalParser extends Parser {
 		console.log('htmldoc', doc);
 
 		const title = this.getTitle(doc);
-
-		let icon = await getEncodedIcon(url);
-		if (icon.trim() === "") {
-			icon = await saveEncodedIcon(url)
-		}
+		const icon = this.getIcon(doc);
 
 		return { title, icon };
 	}
 }
 
-export const parsers: { [key: string]: Parser } = {
-	jsonlink: new JSONLinkParser(),
-	microlink: new MicroLinkParser(),
-	local: new LocalParser(),
-};
+export function parsers(parseType: string, cacheMode: string) {
+	switch (parseType) {
+		case 'jsonlink':
+			return new JSONLinkParser(cacheMode);
+		case 'microlink':
+			return new MicroLinkParser(cacheMode);
+		case 'local':
+			return new LocalParser(cacheMode);
+		default:
+			return new JSONLinkParser(cacheMode);
+	}
+}

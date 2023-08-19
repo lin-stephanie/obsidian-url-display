@@ -4,7 +4,6 @@ import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_S
 import type { URLDisplaySettings, URLExtract, URLParse } from './constants'
 import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
-import { deduplicateObjArrByUniId } from "./utils";
 import { parsers } from "./parser";
 
 
@@ -30,13 +29,13 @@ export default class URLDisplayPlugin extends Plugin {
 			(leaf) => (this.view = new URLDisplayView(leaf, this)),
 		);
 
-		this.addRibbonIcon('external-link', 'Open URL Panel', (evt: MouseEvent) => {
+		this.addRibbonIcon('external-link', 'Open URL Dispaly', (evt: MouseEvent) => {
 			this.isOpen();
 		});
 
 		this.addCommand({
 			id: 'open-url-panel',
-			name: 'Open URL Panel',
+			name: 'Open URL Dispaly',
 			callback: () => {
 			}
 		});
@@ -98,7 +97,7 @@ export default class URLDisplayPlugin extends Plugin {
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
 		);
-		
+
 		console.log("end activateView");
 	}
 
@@ -113,7 +112,6 @@ export default class URLDisplayPlugin extends Plugin {
 			this.view.updateDisplay();
 		} else {
 			this.activeNotehaveURL = true;
-			// option: "jsonlink"、"microlink"、"local"
 			this.activeNoteURLParse = await this.parseURL(activeNoteURL);
 			this.view.updateDisplay();
 		}
@@ -134,48 +132,32 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	}
 
-	private readonly parseURL = async (activeNoteURL: string[]): Promise<URLParse[]>  => {
+	private readonly parseURL = async (activeNoteURL: string[]): Promise<URLParse[]> => {
 		console.log("start parseURL")
 		this.isParsing = true;
 		this.view.updateDisplay();
-		
+
 		const cleanedURLs = this.convertToObject(activeNoteURL);
+		// option: "jsonlink"、"microlink"、"local"
+		const parser = parsers("microlink", this.settings.cacheMode);
 		const parsedURLs = [];
 		let failedCount = 0;
-
+		
+		console.log('cacheMode', this.settings.cacheMode);
 		for (const cleanedURL of cleanedURLs) {
-			const parsedURL = {...cleanedURL} as URLParse;
-			console.log(this.settings.cacheMode);
-			if (this.settings.cacheMode === "diskCache" ) {
-				console.log("start disk")
-				const parser = parsers['microlink'];
-				try {
-					const data = await parser.parse(cleanedURL.link);
-					parsedURL.title = data.title;
-					parsedURL.icon = data.icon;
-					parsedURLs.push(parsedURL)
-				} catch (error) {
-					console.log('error', error);
-					failedCount += 1;
-				}
-				console.log("end disk")	
-			} else {
-				console.log("start memory")
-				const parser = parsers['microlink'];
-				try {
-					const data = await parser.parse(cleanedURL.link);
-					parsedURL.title = data.title;
-					parsedURL.icon = data.icon;
-					parsedURLs.push(parsedURL)
-				} catch (error) {
-					console.log('error', error);
-					failedCount += 1;
-				}
-				console.log("end memory")				
+			const parsedURL = { ...cleanedURL } as URLParse;
+			try {
+				const data = await parser.parse(cleanedURL.link);
+				parsedURL.title = data.title;
+				parsedURL.icon = data.icon;
+				parsedURLs.push(parsedURL)
+			} catch (error) {
+				console.log('error', error);
+				failedCount += 1;
 			}
 		}
 
-		if (failedCount === 0 ) {
+		if (failedCount === 0) {
 			new Notice(`Successed to parse all URL 🎉`);
 		} else {
 			new Notice(`Failed to parse for ${failedCount} URL 😥`);
@@ -191,7 +173,6 @@ export default class URLDisplayPlugin extends Plugin {
 		let URLObject = [];
 
 		for (const url of activeNoteURL) {
-			// console.log(url);
 			const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
 			// case1："https://obsidian.md/"（unmatch is an empty array）
 			if (unmatch.length === 0) {
@@ -215,7 +196,7 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("start cleanURL")
 
 		if (this.settings.DeduplicateURLs) {
-			URLObject = deduplicateObjArrByUniId(URLObject, "link");
+			URLObject = URLDisplayPlugin.deduplicateObjArrByUniId(URLObject, "link");
 		}
 
 		// handle url like: "https://link.zhihu.com/?target=https%3A//conventionalcommits.org/"
@@ -232,6 +213,10 @@ export default class URLDisplayPlugin extends Plugin {
 		return URLObject;
 	}
 
+	private static deduplicateObjArrByUniId(arr: URLExtract[], uniId: string): URLExtract[] {
+		const res = new Map();
+		return arr.filter((item: object) => !res.has(item[uniId]) && res.set(item[uniId], 1));
+	}
 
 	override onunload() {
 	}

@@ -15,7 +15,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Use alias')
-            .setDesc('***')
+            .setDesc('By default, the website title is used as the display text. If enabled, the external link text in brackets ([]) will be used.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.useAlias)
                 .onChange((value) => {
@@ -26,7 +26,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Show favicon')
-            .setDesc('***')
+            .setDesc('If enabled, the panel will not show the favicon, but only the text.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.showFavicon)
                 .onChange((value) => {
@@ -37,7 +37,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Deduplicate URLs')
-            .setDesc('***')
+            .setDesc('If enabled, the panel will display twice if there are 2 same urls in the note.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.DeduplicateURLs)
                 .onChange((value) => {
@@ -48,7 +48,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Cache mode')
-            .setDesc('Select cache mode to save for favicon.')
+            .setDesc('Choose cache mode for saving icons.')
             .addDropdown((value) => {
                 value
                     .addOptions({diskCache: 'disk cache', memoryCache: 'memory cache' })
