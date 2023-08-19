@@ -71,10 +71,10 @@ export class URLDisplayView extends ItemView {
 			navURLHrefContent.setAttribute("href", currentURL.link);
 
 			const navURLHrefContentImg = navURLHrefContent.createEl('img', { cls: 'url-display-content-img' });
-			navURLHrefContentImg.setAttribute("src", currentURL.logo);
+			navURLHrefContentImg.setAttribute("src", currentURL.icon);
 
 			navURLHrefContent.createEl("span", {
-				text: this.plugin.settings.useAliasInBracket && currentURL.alias.trim() !== "" ? currentURL.alias : currentURL.title,
+				text: this.plugin.settings.useAlias && currentURL.alias.trim() !== "" ? currentURL.alias : currentURL.title,
 				cls: 'url-display-content-text',
 			});
 		})

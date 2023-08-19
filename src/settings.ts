@@ -11,27 +11,15 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
     display(): void {
         const { containerEl } = this;
-
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName('Remove duplicate URLs')
+            .setName('Use alias')
             .setDesc('***')
             .addToggle(value => value
-                .setValue(this.plugin.settings.removeDuplicateURLs)
+                .setValue(this.plugin.settings.useAlias)
                 .onChange((value) => {
-                    this.plugin.settings.removeDuplicateURLs = value;
-                    this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName('Use alias in bracket')
-            .setDesc('***')
-            .addToggle(value => value
-                .setValue(this.plugin.settings.useAliasInBracket)
-                .onChange((value) => {
-                    this.plugin.settings.useAliasInBracket = value;
+                    this.plugin.settings.useAlias = value;
                     this.plugin.saveSettings();
                 })
             );
@@ -46,5 +34,29 @@ export class URLDisplaySettingTab extends PluginSettingTab {
                     this.plugin.saveSettings();
                 })
             );
+
+        new Setting(containerEl)
+            .setName('Deduplicate URLs')
+            .setDesc('***')
+            .addToggle(value => value
+                .setValue(this.plugin.settings.DeduplicateURLs)
+                .onChange((value) => {
+                    this.plugin.settings.DeduplicateURLs = value;
+                    this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Cache mode')
+            .setDesc('Select cache mode to save for favicon.')
+            .addDropdown((value) => {
+                value
+                    .addOptions({diskCache: 'disk cache', memoryCache: 'memory cache' })
+                    .setValue(this.plugin.settings.cacheMode)
+                    .onChange((value) => {
+                        this.plugin.settings.cacheMode = value;
+                        this.plugin.saveSettings();
+                    });
+            });
     }
 }

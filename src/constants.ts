@@ -6,15 +6,17 @@ export const EXTERNAL_URL_OBJECT_PATTERN = /\[(?<alias>.*?)\]\((?<link>.+?)\)/g;
 export const IDENTIFY_TARGET_URL = /(\?target=){1}(?<target>https?.*)/g;
 
 export interface URLDisplaySettings {
-    removeDuplicateURLs: boolean;
-    useAliasInBracket: boolean;
+    useAlias: boolean;
     showFavicon: boolean;
+    DeduplicateURLs: boolean;
+    cacheMode: string;
 }
 
 export const DEFAULT_SETTINGS: URLDisplaySettings = {
-    removeDuplicateURLs: true,
-    useAliasInBracket: false,
+    useAlias: false,
     showFavicon: true,
+    DeduplicateURLs: true,
+    cacheMode: 'diskCache',
 }
 
 export interface URLExtract {
@@ -26,5 +28,9 @@ export interface URLParse {
     alias: string;
     link: string;
     title: string;
-    logo: string;
+    icon: string;
+}
+
+export interface ResponseData {
+    [key: string]: object | string | number,
 }

@@ -113,6 +113,7 @@ export default class URLDisplayPlugin extends Plugin {
 			this.view.updateDisplay();
 		} else {
 			this.activeNotehaveURL = true;
+			// option: "jsonlink"、"microlink"、"local"
 			this.activeNoteURLParse = await this.parseURL(activeNoteURL);
 			this.view.updateDisplay();
 		}
@@ -138,23 +139,48 @@ export default class URLDisplayPlugin extends Plugin {
 		this.isParsing = true;
 		this.view.updateDisplay();
 		
-		const parser = parsers["microlink"];
 		const cleanedURLs = this.convertToObject(activeNoteURL);
 		const parsedURLs = [];
-		
+		let failedCount = 0;
+
 		for (const cleanedURL of cleanedURLs) {
 			const parsedURL = {...cleanedURL} as URLParse;
-			try {
-				console.log('parseURL');
-				const data = await parser.parse(cleanedURL.link);
-				parsedURL.title = data.title.replace(/"/g, '\\"');
-				parsedURL.logo = data.logo;
-				parsedURLs.push(parsedURL)
-			} catch (error) {
-				console.log('error', error);
-				new Notice(`Failed to fetch data`);
+			console.log(this.settings.cacheMode);
+			if (this.settings.cacheMode === "diskCache" ) {
+				console.log("start disk")
+				const parser = parsers['microlink'];
+				try {
+					const data = await parser.parse(cleanedURL.link);
+					parsedURL.title = data.title;
+					parsedURL.icon = data.icon;
+					parsedURLs.push(parsedURL)
+				} catch (error) {
+					console.log('error', error);
+					failedCount += 1;
+				}
+				console.log("end disk")	
+			} else {
+				console.log("start memory")
+				const parser = parsers['microlink'];
+				try {
+					const data = await parser.parse(cleanedURL.link);
+					parsedURL.title = data.title;
+					parsedURL.icon = data.icon;
+					parsedURLs.push(parsedURL)
+				} catch (error) {
+					console.log('error', error);
+					failedCount += 1;
+				}
+				console.log("end memory")				
 			}
 		}
+
+		if (failedCount === 0 ) {
+			new Notice(`Successed to parse all URL 🎉`);
+		} else {
+			new Notice(`Failed to parse for ${failedCount} URL 😥`);
+		}
+
 		this.isParsing = false;
 		console.log("end parseURL")
 		return parsedURLs;
@@ -163,6 +189,7 @@ export default class URLDisplayPlugin extends Plugin {
 	private readonly convertToObject = (activeNoteURL: string[]): URLExtract[] => {
 		console.log("start convertToObject")
 		let URLObject = [];
+
 		for (const url of activeNoteURL) {
 			// console.log(url);
 			const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
@@ -178,6 +205,7 @@ export default class URLDisplayPlugin extends Plugin {
 				}
 			}
 		}
+
 		URLObject = this.cleanURL(URLObject);
 		console.log("end convertToObject")
 		return URLObject;
@@ -185,7 +213,8 @@ export default class URLDisplayPlugin extends Plugin {
 
 	private readonly cleanURL = (URLObject: URLExtract[]): URLExtract[] => {
 		console.log("start cleanURL")
-		if (this.settings.removeDuplicateURLs) {
+
+		if (this.settings.DeduplicateURLs) {
 			URLObject = deduplicateObjArrByUniId(URLObject, "link");
 		}
 
@@ -194,10 +223,11 @@ export default class URLDisplayPlugin extends Plugin {
 			for (const match of url.link.matchAll(IDENTIFY_TARGET_URL)) {
 				if (match.groups) {
 					url.link = decodeURIComponent(match.groups.target);
-					console.log(url.link);
+					console.log("cleaned", url.link);
 				}
 			}
 		}
+
 		console.log("end cleanURL")
 		return URLObject;
 	}
