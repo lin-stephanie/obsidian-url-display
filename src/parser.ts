@@ -7,7 +7,6 @@
 
 import { requestUrl, arrayBufferToBase64 } from "obsidian";
 import Mustache from 'mustache';
-import ls from "localstorage-slim";
 
 import type { ResponseData } from './constants'
 
@@ -31,22 +30,9 @@ abstract class Parser {
 		return { ...await this.process(data, url) };
 	}
 
-	public static async getEncodedIcon(url: string): Promise<string> {
-		const hostname = new URL(url).hostname;
-		const name = "icon-" + hostname;
-		const icon = ls.get<string>(name);
-		if (icon) {
-			return icon;
-		}
-		return '';
-	}
-
-	public static async saveEncodedIcon(icon: string, url: string): Promise<string> {
-		const hostname = new URL(url).hostname;
-		const name = "icon-" + hostname;
+	public static async encodedIcon(icon: string): Promise<string> {
 		const request = await requestUrl({ url: icon });
 		const iconBase64 = "data:image/png;base64," + arrayBufferToBase64(request.arrayBuffer);
-		ls.set<string>(name, iconBase64, { ttl: 30 * 24 * 60 * 60 });
 
 		return iconBase64;
 	}
@@ -65,10 +51,7 @@ export class JSONLinkParser extends Parser {
 		console.log('icon', icon);
 		if (this.cacheMode === "memoryCache") {
 			console.log("start memoryCache");
-			let iconBase64 = await Parser.getEncodedIcon(url);
-			if (iconBase64.trim() === "") {
-				iconBase64 = await Parser.saveEncodedIcon(icon, url);
-			}
+			const iconBase64 = await Parser.encodedIcon(icon);
 			icon = iconBase64;
 		}
 
@@ -89,10 +72,7 @@ export class MicroLinkParser extends Parser {
 		console.log('icon', icon);
 		if (this.cacheMode === "memoryCache") {
 			console.log("start memoryCache");
-			let iconBase64 = await Parser.getEncodedIcon(url);
-			if (iconBase64.trim() === "") {
-				iconBase64 = await Parser.saveEncodedIcon(icon, url);
-			}
+			const iconBase64 = await Parser.encodedIcon(icon);
 			icon = iconBase64;
 		}
 

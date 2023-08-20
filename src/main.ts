@@ -1,7 +1,7 @@
-import { MarkdownView, Notice, Plugin, TFile } from 'obsidian';
+import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 
 import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS, IDENTIFY_TARGET_URL } from './constants'
-import type { URLDisplaySettings, URLExtract, URLParse } from './constants'
+import type { URLDisplaySettings, URLParse } from './constants'
 import { URLDisplaySettingTab } from './settings'
 import { URLDisplayView } from './views'
 import { parsers } from "./parser";
@@ -12,7 +12,7 @@ export default class URLDisplayPlugin extends Plugin {
 	public settings: URLDisplaySettings;
 	public view: URLDisplayView;
 	public activeNotehaveURL: boolean | undefined;
-	public activeNoteURLParse: URLParse[];
+	public activeNoteURLParse: URLParse[] | null;
 
 	public isExtracting: boolean | undefined;
 	public isParsing: boolean | undefined;
@@ -34,15 +34,40 @@ export default class URLDisplayPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'open-url-panel',
-			name: 'Open URL Dispaly',
-			callback: () => {
+			id: 'url-display-open',
+			name: 'Open or close Pane',
+			checkCallback: (checking: boolean) => {
+				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (markdownView) {
+					if (!checking) {
+						this.isOpen();
+					}
+					return true;
+				}
+			}
+		});
+
+		this.addCommand({
+			id: 'url-display-refresh',
+			name: 'Refresh URL list',
+			checkCallback: (checking: boolean) => {
+				console.log("checking", checking);
+				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+				if (markdownView && urlDisplayView) {
+					if (!checking) {
+						this.initState();
+						this.updateURL();
+					}
+					return true;
+				}
 			}
 		});
 
 		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
-			// console.log("active-leaf-change");
-			// this.updateView(leaf);
+			console.log("start active-leaf-change");
+			this.isActive(leaf);
+			console.log("end active-leaf-change");
 		}));
 	}
 
@@ -54,9 +79,20 @@ export default class URLDisplayPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	private readonly isActive = (leaf?: WorkspaceLeaf | null) => {
+		if (leaf && leaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+			console.log("start isActive");
+			this.initState();
+			this.updateURL();
+			console.log("end isActive");
+		} else {
+			return;
+		}
+	}
+
 	private readonly isOpen = () => {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE)
+			this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 		} else {
 			this.isMarkdownView();
 		}
@@ -69,7 +105,6 @@ export default class URLDisplayPlugin extends Plugin {
 			console.log("is MarkdownView");
 			this.initState();
 			this.activateView();
-
 		} else {
 			// this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 			console.log("no MarkdownView");
@@ -77,11 +112,11 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	}
 
-	private readonly initState = () => {
+	public readonly initState = () => {
 		this.isExtracting = undefined;
 		this.isParsing = undefined;
 		this.activeNotehaveURL = undefined;
-		this.activeNoteURLParse = [];
+		this.activeNoteURLParse = null;
 	}
 
 	private readonly activateView = async () => {
@@ -150,7 +185,7 @@ export default class URLDisplayPlugin extends Plugin {
 				const data = await parser.parse(cleanedURL.link);
 				parsedURL.title = data.title;
 				parsedURL.icon = data.icon;
-				parsedURLs.push(parsedURL)
+				parsedURLs.push(parsedURL);
 			} catch (error) {
 				console.log('error', error);
 				failedCount += 1;
@@ -168,7 +203,7 @@ export default class URLDisplayPlugin extends Plugin {
 		return parsedURLs;
 	}
 
-	private readonly convertToObject = (activeNoteURL: string[]): URLExtract[] => {
+	private readonly convertToObject = (activeNoteURL: string[]): URLParse[] => {
 		console.log("start convertToObject")
 		let URLObject = [];
 
@@ -192,7 +227,7 @@ export default class URLDisplayPlugin extends Plugin {
 		return URLObject;
 	}
 
-	private readonly cleanURL = (URLObject: URLExtract[]): URLExtract[] => {
+	private readonly cleanURL = (URLObject: URLParse[]): URLParse[] => {
 		console.log("start cleanURL")
 
 		if (this.settings.DeduplicateURLs) {
@@ -213,27 +248,11 @@ export default class URLDisplayPlugin extends Plugin {
 		return URLObject;
 	}
 
-	private static deduplicateObjArrByUniId(arr: URLExtract[], uniId: string): URLExtract[] {
+	private static deduplicateObjArrByUniId(arr: URLParse[], uniId: string): URLParse[] {
 		const res = new Map();
 		return arr.filter((item: object) => !res.has(item[uniId]) && res.set(item[uniId], 1));
 	}
 
-	override onunload() {
+	public override onunload() {
 	}
 }
-
-// updateView = (avtiveLeaf: WorkspaceLeaf | null): void => {
-// 	/* if (avtiveLeaf) {
-// 		console.log(avtiveLeaf.getViewState().type);
-// 	} */
-
-// 	if (avtiveLeaf && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-// 		// console.log(this.app.workspace.getLeavesOfType(VIEW_TYPE)[0].view);
-// 		this.view.updateDisplay();
-// 	}
-// 	// 当激活页不是md时，控制是否要关闭视图
-// 	/* if (avtiveLeaf && avtiveLeaf.getViewState().type !== "markdown" && avtiveLeaf.getViewState().type !== "url-display" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-// 		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-// 		new Notice("It needs to work in active markdown view 😄");
-// 	} */
-// }

@@ -19,16 +19,11 @@ export const DEFAULT_SETTINGS: URLDisplaySettings = {
     cacheMode: 'diskCache',
 }
 
-export interface URLExtract {
-    alias: string;
-    link: string;
-}
-
 export interface URLParse {
     alias: string;
     link: string;
-    title: string;
-    icon: string;
+    title?: string;
+    icon?: string;
 }
 
 export interface ResponseData {

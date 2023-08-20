@@ -26,7 +26,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Show favicon')
-            .setDesc('If enabled, the panel will not show the favicon, but only the text.')
+            .setDesc('If enabled, the view will not show the favicon, but only the text.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.showFavicon)
                 .onChange((value) => {
@@ -37,7 +37,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Deduplicate URLs')
-            .setDesc('If enabled, the panel will display twice if there are 2 same urls in the note.')
+            .setDesc('If enabled, the view will display twice if there are 2 same urls in the note.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.DeduplicateURLs)
                 .onChange((value) => {
@@ -48,7 +48,7 @@ export class URLDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Cache mode')
-            .setDesc('Choose cache mode for saving icons.')
+            .setDesc('Choose cache mode for saving favicons.')
             .addDropdown((value) => {
                 value
                     .addOptions({diskCache: 'disk cache', memoryCache: 'memory cache' })
