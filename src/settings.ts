@@ -1,5 +1,5 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
-import URLDisplayPlugin from './main';
+import { App, PluginSettingTab, Setting } from "obsidian";
+import URLDisplayPlugin from "./main";
 
 export class URLDisplaySettingTab extends PluginSettingTab {
     plugin: URLDisplayPlugin;

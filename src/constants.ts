@@ -29,3 +29,8 @@ export interface URLParse {
 export interface ResponseData {
     [key: string]: object | string | number,
 }
+
+export interface CacheData {
+    title: string;
+    icon: string;
+}

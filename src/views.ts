@@ -1,6 +1,7 @@
-import { WorkspaceLeaf, ItemView, Menu } from 'obsidian';
+import { WorkspaceLeaf, ItemView, Menu } from "obsidian";
+
 import URLDisplayPlugin from "./main";
-import { VIEW_TYPE } from './constants'
+import { VIEW_TYPE } from "./constants";
 
 export class URLDisplayView extends ItemView {
 	private readonly plugin: URLDisplayPlugin;
@@ -105,31 +106,3 @@ export class URLDisplayView extends ItemView {
 		// Nothing to clean up.
 	}
 }
-
-// 	async updateDisplay() {
-// 		if (!this.plugin.activeNotehaveURL) {
-// 			const container = this.containerEl.children[1];
-// 			container.empty();
-// 			container.createEl("p", { text: "No legal URLs found on this note 😄" });
-// 		}
-
-// 		// 显示进度
-
-// 		// 更新UI
-// 		// await this.plugin.parseActiveNoteURL(this.plugin.activeNoteURLExtract);
-// 		// console.log(this.plugin.activeNoteURLParse);
-
-// 		// this.update();
-
-
-// 		// 形成视图
-// 		const container = this.containerEl.children[1];
-// 		container.empty();
-// 		// 无URL提示
-// 		if (this.plugin.activeNoteURLParse.length === 0) {
-// 			container.createEl("p", { text: "No legal URLs found on this note 😄" });
-// 		// 有URL显示
-// 		} else {
-// 			container.createEl("p", { text: String(this.plugin.activeNoteURLParse) });
-// 		}
-// }

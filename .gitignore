@@ -23,4 +23,4 @@ data.json
 .DS_Store
 
 # Misc
-copy-*.ts
+*copy.ts

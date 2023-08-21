@@ -1,21 +1,26 @@
-import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
 
-import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS, IDENTIFY_TARGET_URL } from './constants'
-import type { URLDisplaySettings, URLParse } from './constants'
 import { URLDisplaySettingTab } from './settings'
-import { URLDisplayView } from './views'
-import { parsers } from "./parser";
+import { URLDisplayView } from "./views"
+import { IndexedDBCache } from "./cache";
+import { MicroLinkParser } from "./parser";
+import type { URLDisplaySettings, URLParse } from "./constants"
+import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS, IDENTIFY_TARGET_URL } from "./constants"
+
 
 
 export default class URLDisplayPlugin extends Plugin {
-
 	public settings: URLDisplaySettings;
 	public view: URLDisplayView;
+
 	public activeNotehaveURL: boolean | undefined;
 	public activeNoteURLParse: URLParse[] | null;
 
 	public isExtracting: boolean | undefined;
 	public isParsing: boolean | undefined;
+
+	public cache: IndexedDBCache;
+	public parser: MicroLinkParser;
 
 	public override async onload() {
 		console.clear();
@@ -69,6 +74,9 @@ export default class URLDisplayPlugin extends Plugin {
 			this.isActive(leaf);
 			console.log("end active-leaf-change");
 		}));
+
+		this.cache = new IndexedDBCache();
+		this.parser = new MicroLinkParser(this, this.cache);
 	}
 
 	public async loadSettings() {
@@ -173,8 +181,6 @@ export default class URLDisplayPlugin extends Plugin {
 		this.view.updateDisplay();
 
 		const cleanedURLs = this.convertToObject(activeNoteURL);
-		// option: "jsonlink"、"microlink"、"local"
-		const parser = parsers("microlink", this.settings.cacheMode);
 		const parsedURLs = [];
 		let failedCount = 0;
 		
@@ -182,7 +188,7 @@ export default class URLDisplayPlugin extends Plugin {
 		for (const cleanedURL of cleanedURLs) {
 			const parsedURL = { ...cleanedURL } as URLParse;
 			try {
-				const data = await parser.parse(cleanedURL.link);
+				const data = await this.parser.parse(cleanedURL.link);
 				parsedURL.title = data.title;
 				parsedURL.icon = data.icon;
 				parsedURLs.push(parsedURL);
@@ -193,7 +199,7 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 
 		if (failedCount === 0) {
-			new Notice(`Successed to parse all URL 🎉`);
+			new Notice("Successed to parse all URL 🎉");
 		} else {
 			new Notice(`Failed to parse for ${failedCount} URL 😥`);
 		}
@@ -254,5 +260,6 @@ export default class URLDisplayPlugin extends Plugin {
 	}
 
 	public override onunload() {
+		// Nothing to clean up.
 	}
 }
