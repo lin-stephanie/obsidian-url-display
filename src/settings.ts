@@ -2,14 +2,14 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import URLDisplayPlugin from "./main";
 
 export class URLDisplaySettingTab extends PluginSettingTab {
-    plugin: URLDisplayPlugin;
+    private plugin: URLDisplayPlugin;
 
     constructor(app: App, plugin: URLDisplayPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
 
-    display(): void {
+    public override display(): void {
         const { containerEl } = this;
         containerEl.empty();
 

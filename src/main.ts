@@ -7,8 +7,6 @@ import { MicroLinkParser } from "./parser";
 import type { URLDisplaySettings, URLParse } from "./constants"
 import { VIEW_TYPE, DEFAULT_SETTINGS, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE } from "./constants"
 
-
-
 export default class URLDisplayPlugin extends Plugin {
 	public settings: URLDisplaySettings;
 	public view: URLDisplayView;
@@ -18,8 +16,8 @@ export default class URLDisplayPlugin extends Plugin {
 	public activeNotehaveURL: boolean | undefined;
 	public activeNoteURLParse: URLParse[] | null;
 
-	public cache: IndexedDBCache;
-	public parser: MicroLinkParser;
+	private cache: IndexedDBCache;
+	private parser: MicroLinkParser;
 
 	public override async onload() {
 		console.clear();
@@ -143,7 +141,7 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("end activateView");
 	}
 
-	public readonly updateURL = async () => {
+	public readonly updateURL = URLDisplayPlugin.debounce(async () => {
 		console.log("start updateURL")
 		const activeNoteURL = await this.extractURL(this.app.workspace.getActiveFile());
 		console.log("end extractURL")
@@ -159,7 +157,7 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 
 		console.log("end updateURL")
-	}
+	})
 
 	private readonly extractURL = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
 		console.log("start extractURL")
@@ -169,7 +167,7 @@ export default class URLDisplayPlugin extends Plugin {
 			// const md = await this.app.vault.read(activeFile);
 			const activeFilContent = await this.app.vault.cachedRead(activeFile);
 			return activeFilContent.match(EXTERNAL_LINK);
-		} 
+		}
 	}
 
 	private readonly parseURL = async (activeNoteURL: string[]): Promise<URLParse[]> => {
@@ -179,7 +177,7 @@ export default class URLDisplayPlugin extends Plugin {
 
 		const cleanedURLs = this.convertToObject(activeNoteURL);
 		let failedCount = 0;
-		
+
 		console.log('cacheMode', this.settings.cacheMode);
 		for (const cleanedURL of cleanedURLs) {
 			try {
@@ -250,10 +248,18 @@ export default class URLDisplayPlugin extends Plugin {
 
 	private static deduplicateObjArrByUniId(arr: URLParse[], uniId: string): URLParse[] {
 		const res = new Map();
-		return arr.filter((item: object) => !res.has(item[uniId]) && res.set(item[uniId], 1));
+		return arr.filter((item) => !res.has(item[uniId as keyof URLParse]) && res.set(item[uniId as keyof URLParse], 1));
 	}
 
+	private static debounce = (fn: () => void, ms = 1000) => {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return function () {
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => fn.apply(this), ms);
+		};
+	};
+
 	public override onunload() {
-		// Nothing to clean up.
+		console.log("unloading obsidian-url-display plugin v" + this.manifest.version);
 	}
 }

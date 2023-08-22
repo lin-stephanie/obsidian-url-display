@@ -4,7 +4,7 @@ import URLDisplayPlugin from "./main";
 import { VIEW_TYPE } from "./constants";
 
 export class URLDisplayView extends ItemView {
-	private readonly plugin: URLDisplayPlugin;
+	private plugin: URLDisplayPlugin;
 
 	constructor(leaf: WorkspaceLeaf, plugin: URLDisplayPlugin) {
 		super(leaf);
@@ -53,7 +53,7 @@ export class URLDisplayView extends ItemView {
 		}
 	}
 
-	public readonly updateList = async (): Promise<void> => {
+	private readonly updateList = async (): Promise<void> => {
 		console.log("start updateList")
 
 		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
@@ -87,7 +87,7 @@ export class URLDisplayView extends ItemView {
 		container.appendChild(rootEl);
 	}
 
-	public onHeaderMenu(menu: Menu): void {
+	public readonly onHeaderMenu = (menu: Menu) :void => {
 		menu
 			.addItem((item) => {
 				item
