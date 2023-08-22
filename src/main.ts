@@ -5,7 +5,7 @@ import { URLDisplayView } from "./views"
 import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
 import type { URLDisplaySettings, URLParse } from "./constants"
-import { VIEW_TYPE, EXTERNAL_URL_PATTERN, EXTERNAL_URL_OBJECT_PATTERN, DEFAULT_SETTINGS, IDENTIFY_TARGET_URL } from "./constants"
+import { VIEW_TYPE, DEFAULT_SETTINGS, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE } from "./constants"
 
 
 
@@ -13,11 +13,10 @@ export default class URLDisplayPlugin extends Plugin {
 	public settings: URLDisplaySettings;
 	public view: URLDisplayView;
 
-	public activeNotehaveURL: boolean | undefined;
-	public activeNoteURLParse: URLParse[] | null;
-
 	public isExtracting: boolean | undefined;
 	public isParsing: boolean | undefined;
+	public activeNotehaveURL: boolean | undefined;
+	public activeNoteURLParse: URLParse[] | null;
 
 	public cache: IndexedDBCache;
 	public parser: MicroLinkParser;
@@ -150,7 +149,7 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("end extractURL")
 		this.isExtracting = false;
 
-		if (activeNoteURL.length === 0) {
+		if (!activeNoteURL) {
 			this.activeNotehaveURL = false;
 			this.view.updateDisplay();
 		} else {
@@ -162,17 +161,15 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("end updateURL")
 	}
 
-	private readonly extractURL = async (activeFile: TFile | null): Promise<string[]> => {
+	private readonly extractURL = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
 		console.log("start extractURL")
 		this.isExtracting = true;
 
 		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
 			// const md = await this.app.vault.read(activeFile);
 			const activeFilContent = await this.app.vault.cachedRead(activeFile);
-			return activeFilContent.match(EXTERNAL_URL_PATTERN) || [];
-		} else {
-			return []
-		}
+			return activeFilContent.match(EXTERNAL_LINK);
+		} 
 	}
 
 	private readonly parseURL = async (activeNoteURL: string[]): Promise<URLParse[]> => {
@@ -181,17 +178,14 @@ export default class URLDisplayPlugin extends Plugin {
 		this.view.updateDisplay();
 
 		const cleanedURLs = this.convertToObject(activeNoteURL);
-		const parsedURLs = [];
 		let failedCount = 0;
 		
 		console.log('cacheMode', this.settings.cacheMode);
 		for (const cleanedURL of cleanedURLs) {
-			const parsedURL = { ...cleanedURL } as URLParse;
 			try {
 				const data = await this.parser.parse(cleanedURL.link);
-				parsedURL.title = data.title;
-				parsedURL.icon = data.icon;
-				parsedURLs.push(parsedURL);
+				cleanedURL.title = data.title;
+				cleanedURL.icon = data.icon;
 			} catch (error) {
 				console.log('error', error);
 				failedCount += 1;
@@ -199,42 +193,42 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 
 		if (failedCount === 0) {
-			new Notice("Successed to parse all URL 🎉");
+			new Notice("Successfully parsed all URLs 🎉");
 		} else {
-			new Notice(`Failed to parse for ${failedCount} URL 😥`);
+			new Notice(`Failed to parse ${failedCount} URLs 😥`);
 		}
 
 		this.isParsing = false;
 		console.log("end parseURL")
-		return parsedURLs;
+		return cleanedURLs;
 	}
 
 	private readonly convertToObject = (activeNoteURL: string[]): URLParse[] => {
-		console.log("start convertToObject")
+		console.log("start convertToObject");
 		let URLObject = [];
 
 		for (const url of activeNoteURL) {
-			const unmatch = [...url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)]
+			const unmatch = [...url.matchAll(PARTITION)]
 			// case1："https://obsidian.md/"（unmatch is an empty array）
-			if (unmatch.length === 0) {
+			if (unmatch.length === 0 && !EXCLUDE.test(url)) {
 				URLObject.push({ alias: "", link: url });
 				continue;
 			}
 			// case2："[]()"
-			for (const match of url.matchAll(EXTERNAL_URL_OBJECT_PATTERN)) {
-				if (match.groups) {
+			for (const match of url.matchAll(PARTITION)) {
+				if (match.groups && !EXCLUDE.test(match.groups.link)) {
 					URLObject.push({ alias: match.groups.alias, link: match.groups.link });
 				}
 			}
 		}
 
 		URLObject = this.cleanURL(URLObject);
-		console.log("end convertToObject")
+		console.log("end cleanURL", URLObject);
 		return URLObject;
 	}
 
 	private readonly cleanURL = (URLObject: URLParse[]): URLParse[] => {
-		console.log("start cleanURL")
+		console.log("start cleanURL", URLObject);
 
 		if (this.settings.DeduplicateURLs) {
 			URLObject = URLDisplayPlugin.deduplicateObjArrByUniId(URLObject, "link");
@@ -242,7 +236,7 @@ export default class URLDisplayPlugin extends Plugin {
 
 		// handle url like: "https://link.zhihu.com/?target=https%3A//conventionalcommits.org/"
 		for (const url of URLObject) {
-			for (const match of url.link.matchAll(IDENTIFY_TARGET_URL)) {
+			for (const match of url.link.matchAll(SPECIAL)) {
 				if (match.groups) {
 					url.link = decodeURIComponent(match.groups.target);
 					console.log("cleaned", url.link);
@@ -250,7 +244,7 @@ export default class URLDisplayPlugin extends Plugin {
 			}
 		}
 
-		console.log("end cleanURL")
+		console.log("end cleanURL");
 		return URLObject;
 	}
 

@@ -39,7 +39,7 @@ export class URLDisplayView extends ItemView {
 
 		if (!this.plugin.isExtracting && !this.plugin.activeNotehaveURL) {
 			console.log("null activeNotehaveURL")
-			container.createEl("p", { text: "No legal URLs found on this note 😄" });
+			container.createEl("p", { text: "No legal URL found in this note 😄" });
 		}
 
 		if (this.plugin.isParsing) {
