@@ -7,21 +7,23 @@ export const PARTITION = /\[(?<alias>.*?)\]\((?<link>.+?)\)/g;
 export const SPECIAL = /(\?target=){1}(?<target>https?.*)/g;
 export const EXCLUDE = /https?:\/\/.*?(apng|avif|bmp|gif|ico|jpeg|jpg|png|svg|tif|tiff|webp)/g;
 
-export interface URLDisplaySettings {
+export interface UrlDisplaySettings {
     useAlias: boolean;
     showFavicon: boolean;
-    DeduplicateURLs: boolean;
+    deduplicateUrls: boolean;
     cacheMode: string;
+    noticeMode: string;
 }
 
-export const DEFAULT_SETTINGS: URLDisplaySettings = {
+export const DEFAULT_SETTINGS: UrlDisplaySettings = {
     useAlias: false,
     showFavicon: true,
-    DeduplicateURLs: true,
+    deduplicateUrls: true,
     cacheMode: 'diskCache',
+    noticeMode: 'both',
 }
 
-export interface URLParse {
+export interface UrlParse {
     alias: string;
     link: string;
     title?: string;

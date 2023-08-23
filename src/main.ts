@@ -1,20 +1,20 @@
 import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
 
-import { URLDisplaySettingTab } from './settings'
-import { URLDisplayView } from "./views"
+import { UrlDisplaySettingTab } from './settings'
+import { UrlDisplayView } from "./views"
 import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
-import type { URLDisplaySettings, URLParse } from "./constants"
+import type { UrlDisplaySettings, UrlParse } from "./constants"
 import { VIEW_TYPE, DEFAULT_SETTINGS, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE } from "./constants"
 
-export default class URLDisplayPlugin extends Plugin {
-	public settings: URLDisplaySettings;
-	public view: URLDisplayView;
+export default class UrlDisplayPlugin extends Plugin {
+	public settings: UrlDisplaySettings;
+	public view: UrlDisplayView;
 
 	public isExtracting: boolean | undefined;
 	public isParsing: boolean | undefined;
-	public activeNotehaveURL: boolean | undefined;
-	public activeNoteURLParse: URLParse[] | null;
+	public activeNotehaveUrl: boolean | undefined;
+	public activeNoteUrlParse: UrlParse[] | null;
 
 	private cache: IndexedDBCache;
 	private parser: MicroLinkParser;
@@ -24,11 +24,11 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
 		await this.loadSettings();
-		this.addSettingTab(new URLDisplaySettingTab(this.app, this));
+		this.addSettingTab(new UrlDisplaySettingTab(this.app, this));
 
 		this.registerView(
 			VIEW_TYPE,
-			(leaf) => (this.view = new URLDisplayView(leaf, this)),
+			(leaf) => (this.view = new UrlDisplayView(leaf, this)),
 		);
 
 		this.addRibbonIcon('external-link', 'Open URL Dispaly', (evt: MouseEvent) => {
@@ -59,7 +59,7 @@ export default class URLDisplayPlugin extends Plugin {
 				if (markdownView && urlDisplayView) {
 					if (!checking) {
 						this.initState();
-						this.updateURL();
+						this.updateUrl();
 					}
 					return true;
 				}
@@ -88,7 +88,7 @@ export default class URLDisplayPlugin extends Plugin {
 		if (leaf && leaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
 			console.log("start isActive");
 			this.initState();
-			this.updateURL();
+			this.updateUrl();
 			console.log("end isActive");
 		} else {
 			return;
@@ -120,20 +120,18 @@ export default class URLDisplayPlugin extends Plugin {
 	public readonly initState = () => {
 		this.isExtracting = undefined;
 		this.isParsing = undefined;
-		this.activeNotehaveURL = undefined;
-		this.activeNoteURLParse = null;
+		this.activeNotehaveUrl = undefined;
+		this.activeNoteUrlParse = null;
 	}
 
 	private readonly activateView = async () => {
 		console.log("start activateView");
 
-		/* const leaf = this.app.workspace.getRightLeaf(false);
-		await leaf.setViewState({ type: VIEW_TYPE });
-		this.app.workspace.revealLeaf(leaf); */
 		await this.app.workspace.getRightLeaf(false).setViewState({
 			type: VIEW_TYPE,
 			active: true,
 		});
+
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
 		);
@@ -141,26 +139,26 @@ export default class URLDisplayPlugin extends Plugin {
 		console.log("end activateView");
 	}
 
-	public readonly updateURL = URLDisplayPlugin.debounce(async () => {
-		console.log("start updateURL")
-		const activeNoteURL = await this.extractURL(this.app.workspace.getActiveFile());
-		console.log("end extractURL")
+	public readonly updateUrl = UrlDisplayPlugin.debounce(async () => {
+		console.log("start updateUrl")
+		const activeNoteUrl = await this.extractUrl(this.app.workspace.getActiveFile());
+		console.log("end extractUrl")
 		this.isExtracting = false;
 
-		if (!activeNoteURL) {
-			this.activeNotehaveURL = false;
+		if (!activeNoteUrl) {
+			this.activeNotehaveUrl = false;
 			this.view.updateDisplay();
 		} else {
-			this.activeNotehaveURL = true;
-			this.activeNoteURLParse = await this.parseURL(activeNoteURL);
+			this.activeNotehaveUrl = true;
+			this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
 			this.view.updateDisplay();
 		}
 
-		console.log("end updateURL")
+		console.log("end updateUrl")
 	})
 
-	private readonly extractURL = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
-		console.log("start extractURL")
+	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
+		console.log("start extractUrl")
 		this.isExtracting = true;
 
 		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
@@ -170,75 +168,79 @@ export default class URLDisplayPlugin extends Plugin {
 		}
 	}
 
-	private readonly parseURL = async (activeNoteURL: string[]): Promise<URLParse[]> => {
-		console.log("start parseURL")
+	private readonly parseUrl = async (activeNoteUrl: string[]): Promise<UrlParse[]> => {
+		console.log("start parseUrl")
 		this.isParsing = true;
 		this.view.updateDisplay();
 
-		const cleanedURLs = this.convertToObject(activeNoteURL);
+		const cleanedUrls = this.convertToObject(activeNoteUrl);
+
 		if (this.settings.useAlias && !this.settings.showFavicon) {
+			if (this.settings.noticeMode === "successful" || this.settings.noticeMode === "both") {
+				new Notice("Successfully parsed all URLs 🎉");
+			}
 			this.isParsing = false;
-			return cleanedURLs;
+			return cleanedUrls;
 		} else {
 			let failedCount = 0;
 			console.log('cacheMode', this.settings.cacheMode);
 
-			for (const cleanedURL of cleanedURLs) {
+			for (const cleanedUrl of cleanedUrls) {
 				try {
-					const data = await this.parser.parse(cleanedURL.link);
-					cleanedURL.title = data.title;
-					cleanedURL.icon = data.icon;
+					const data = await this.parser.parse(cleanedUrl.link);
+					cleanedUrl.title = data.title;
+					cleanedUrl.icon = data.icon;
 				} catch (error) {
 					console.log('error', error);
 					failedCount += 1;
 				}
 			}
 
-			if (failedCount === 0) {
+			if (failedCount === 0 && (this.settings.noticeMode === "successful" || this.settings.noticeMode === "both")) {
 				new Notice("Successfully parsed all URLs 🎉");
-			} else {
+			} else if (failedCount !== 0 && (this.settings.noticeMode === "failed" || this.settings.noticeMode === "both")) {
 				new Notice(`Failed to parse ${failedCount} URLs 😥`);
 			}
 
 			this.isParsing = false;
-			console.log("end parseURL");
-			return cleanedURLs;
+			console.log("end parseUrl");
+			return cleanedUrls;
 		}
 	}
 
-	private readonly convertToObject = (activeNoteURL: string[]): URLParse[] => {
+	private readonly convertToObject = (activeNoteUrl: string[]): UrlParse[] => {
 		console.log("start convertToObject");
-		let URLObject = [];
+		let UrlObject = [];
 
-		for (const url of activeNoteURL) {
+		for (const url of activeNoteUrl) {
 			const unmatch = [...url.matchAll(PARTITION)]
 			// case1："https://obsidian.md/"（unmatch is an empty array）
 			if (unmatch.length === 0 && !EXCLUDE.test(url)) {
-				URLObject.push({ alias: "", link: url });
+				UrlObject.push({ alias: "", link: url });
 				continue;
 			}
 			// case2："[]()"
 			for (const match of url.matchAll(PARTITION)) {
 				if (match.groups && !EXCLUDE.test(match.groups.link)) {
-					URLObject.push({ alias: match.groups.alias, link: match.groups.link });
+					UrlObject.push({ alias: match.groups.alias, link: match.groups.link });
 				}
 			}
 		}
 
-		URLObject = this.cleanURL(URLObject);
-		console.log("end cleanURL", URLObject);
-		return URLObject;
+		UrlObject = this.cleanUrl(UrlObject);
+		console.log("end cleanUrl", UrlObject);
+		return UrlObject;
 	}
 
-	private readonly cleanURL = (URLObject: URLParse[]): URLParse[] => {
-		console.log("start cleanURL", URLObject);
+	private readonly cleanUrl = (UrlObject: UrlParse[]): UrlParse[] => {
+		console.log("start cleanUrl", UrlObject);
 
-		if (this.settings.DeduplicateURLs) {
-			URLObject = URLDisplayPlugin.deduplicateObjArrByUniId(URLObject, "link");
+		if (this.settings.deduplicateUrls) {
+			UrlObject = UrlDisplayPlugin.deduplicateObjArrByUniId(UrlObject, "link");
 		}
 
 		// handle url like: "https://link.zhihu.com/?target=https%3A//conventionalcommits.org/"
-		for (const url of URLObject) {
+		for (const url of UrlObject) {
 			for (const match of url.link.matchAll(SPECIAL)) {
 				if (match.groups) {
 					url.link = decodeURIComponent(match.groups.target);
@@ -247,13 +249,13 @@ export default class URLDisplayPlugin extends Plugin {
 			}
 		}
 
-		console.log("end cleanURL");
-		return URLObject;
+		console.log("end cleanUrl");
+		return UrlObject;
 	}
 
-	private static deduplicateObjArrByUniId(arr: URLParse[], uniId: string): URLParse[] {
+	private static deduplicateObjArrByUniId = (arr: UrlParse[], uniId: string): UrlParse[] => {
 		const res = new Map();
-		return arr.filter((item) => !res.has(item[uniId as keyof URLParse]) && res.set(item[uniId as keyof URLParse], 1));
+		return arr.filter((item) => !res.has(item[uniId as keyof UrlParse]) && res.set(item[uniId as keyof UrlParse], 1));
 	}
 
 	private static debounce = (fn: () => void, ms = 1000) => {
