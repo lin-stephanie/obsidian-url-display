@@ -1,8 +1,8 @@
 {
 	"id": "url-display",
 	"name": "URL Display",
-	"version": "1.0.0",
-	"minAppVersion": "1.0.0",
+	"version": "1.0.0-alpha",
+	"minAppVersion": "0.15.0",
 	"description": "Extract and display URLs of notes in Obsidian.",
 	"author": "Stephaine Lin",
 	"authorUrl": "https://github.com/lin-stephanie",

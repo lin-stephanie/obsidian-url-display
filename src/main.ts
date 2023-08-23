@@ -113,7 +113,7 @@ export default class URLDisplayPlugin extends Plugin {
 		} else {
 			// this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 			console.log("no MarkdownView");
-			new Notice("It needs to work in active markdown view 😅");
+			new Notice("Move focus into a markdown file 😉");
 		}
 	}
 
@@ -176,29 +176,34 @@ export default class URLDisplayPlugin extends Plugin {
 		this.view.updateDisplay();
 
 		const cleanedURLs = this.convertToObject(activeNoteURL);
-		let failedCount = 0;
-
-		console.log('cacheMode', this.settings.cacheMode);
-		for (const cleanedURL of cleanedURLs) {
-			try {
-				const data = await this.parser.parse(cleanedURL.link);
-				cleanedURL.title = data.title;
-				cleanedURL.icon = data.icon;
-			} catch (error) {
-				console.log('error', error);
-				failedCount += 1;
-			}
-		}
-
-		if (failedCount === 0) {
-			new Notice("Successfully parsed all URLs 🎉");
+		if (this.settings.useAlias && !this.settings.showFavicon) {
+			this.isParsing = false;
+			return cleanedURLs;
 		} else {
-			new Notice(`Failed to parse ${failedCount} URLs 😥`);
-		}
+			let failedCount = 0;
+			console.log('cacheMode', this.settings.cacheMode);
 
-		this.isParsing = false;
-		console.log("end parseURL")
-		return cleanedURLs;
+			for (const cleanedURL of cleanedURLs) {
+				try {
+					const data = await this.parser.parse(cleanedURL.link);
+					cleanedURL.title = data.title;
+					cleanedURL.icon = data.icon;
+				} catch (error) {
+					console.log('error', error);
+					failedCount += 1;
+				}
+			}
+
+			if (failedCount === 0) {
+				new Notice("Successfully parsed all URLs 🎉");
+			} else {
+				new Notice(`Failed to parse ${failedCount} URLs 😥`);
+			}
+
+			this.isParsing = false;
+			console.log("end parseURL");
+			return cleanedURLs;
+		}
 	}
 
 	private readonly convertToObject = (activeNoteURL: string[]): URLParse[] => {
