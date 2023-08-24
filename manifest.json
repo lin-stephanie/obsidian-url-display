@@ -4,7 +4,7 @@
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Extract and display external URLs of the note in Obsidian.",
-	"author": "stephanie Lin",
+	"author": "Stephanie Lin",
 	"authorUrl": "https://github.com/lin-stephanie",
 	"isDesktopOnly": false
 }

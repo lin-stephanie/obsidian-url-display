@@ -10,7 +10,7 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "stephanie Lin",
+	"author": "Stephanie Lin",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/mustache": "^4.2.2",
