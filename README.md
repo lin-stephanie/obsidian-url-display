@@ -1,96 +1,67 @@
-# Obsidian Sample Plugin
+# Obsidian URL Display
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This [Obsidian](https://obsidian.md/) plugin can extract external URLs from the active note and display them in the pane opened from the ribbon. You can adjust the content displayed in the pane through plugin setting.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+This is how it [looks](https://youtu.be/w5nlhg8Bq-0). 
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+![demo](https://github.com/lin-stephanie/obsidian-url-display/blob/main/docs/demo.png)
+## Motivation
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+I often clip and paste some blog articles to my Obsidian vault for reading and taking notes, sometimes I want to extract all the external URLs in a note and open them in the browser, just like obsidian's native internal links. So I made this plugin, which currently can:
 
-## First time developing plugins?
+- Extract external URLs in the active note and show them in the pane
+- Select to open the external URLs like a bookmark bar 
 
-Quick starting guide for new plugin devs:
+If you are interested, you can go to [Polls](https://github.com/lin-stephanie/obsidian-url-display/discussions/1) to vote for the new features what I want to implement next.
+## Usage
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### Install
+- Directly install from Obsidian Market.
+- Download the latest release. Extract and put 3 files (main.js,  styles.css, manifest.json) to folder {{obsidian_vault}}/.obsidian/plugins/obsidian-url-display.
 
-## Releasing new releases
+### Enable
+- Move focus into a note, then:
+- Select on the plugin icon in the ribbon, or:
+- Open the command palette and select the command `URL Display: Open or close pane`
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### Update URL list
+- Right select on the plugin icon in the sidebar and select `Refresh list`, or:
+- Open the command palette and select the command `URL Display: Refresh list`
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### Tips
+- Normally, when you switch between different notes, the URL List will be automatically updated.
+- After you modify URL in the active note, you need to manually refresh the URL list as mentioned above.
+- Note that if you enable show favicon or turn off use alias in the plugin settings, the plugin needs to request URL metadata, which will take a certain amount of time. During this period, you can do other things first.
 
-## Adding your plugin to the community plugin list
-
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+### Supported URL formats
+```md
+https://example.org
+[Alias](https://example.org)
+[](https://example.org)
 ```
+## Settings
 
-If you have multiple URLs, you can also do:
+|        Item                               |        Description                                                                                                                                                                                                                                   |     Value                                    |        Default             |
+|:------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------|:---------------------------|
+|        Deduplicate URLs                   |       If enabled, 2 same URLs in the note will only display once.                                                                                                                                                                                    |     boolean                                  |        false               |
+|        Use alias                          |        By default, the website title from URL metadata is used as the display text. If enabled, the text in brackets ([]) will be used.                                                                                                              |     boolean                                  |        true                |
+|       Show favicon                        |       If disabled, the pane will not show the favicon, but only the text.                                                                                                                                                                            |     boolean                                  |        true                |
+|        Cache mode                         |        Choose cache mode for saving favicons. This will only take effect when show favicon is set to  `true`.                                                                                                                                        |     disk cache, memory cache                 |        disk cache          |
+|      Notice mode                          |      You can customize the type of notifications when URL parsing finishes.                                                                                                                                                                          |     none, successful, failed, both&nbsp;     |      both                  |  
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+About the choice of favicon cache mode (if you enable show favicon setting):
+- If you want the favicon to appear faste, you may choose `memory cache`, but please note that it may affect the current performance.
+- If you don't care about speed and there are many URLs, it is recommended to choose `disk cache`.
 
-## API Documentation
+## Thanks
 
-See https://github.com/obsidianmd/obsidian-api
+Thanks to the following great plugins for reference and inspiration:
+- [joethei/obsidian-link-favicon](https://github.com/joethei/obsidian-link-favicon)
+- [Seraphli/obsidian-link-embed](https://github.com/Seraphli/obsidian-link-embed)
+
+## Contribution
+
+If you see any errors or room for improvement on this plugin, feel free to open an [issues](https://github.com/lin-stephanie/obsidian-url-display/issues) or [pull request](https://github.com/lin-stephanie/obsidian-url-display/pulls) on obsidian-url-display repository. Thank you in advance for contributing! 
+
+If this plugin adds value for you, I would appreciate if you could give this repository a star. 😊
+
