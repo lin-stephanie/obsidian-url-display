@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-url-display",
-	"version": "1.0.0-alpha",
+	"version": "1.0.0",
 	"description": "Extract and display external URLs of the note in Obsidian.",
 	"main": "main.js",
 	"scripts": {
