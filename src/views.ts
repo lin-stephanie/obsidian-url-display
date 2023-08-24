@@ -28,7 +28,6 @@ export class UrlDisplayView extends ItemView {
 	}
 
 	public readonly updateDisplay = () => {
-		console.log("start updateDisplay")
 		const container = this.containerEl.children[1];
 		container.empty();
 
@@ -38,12 +37,10 @@ export class UrlDisplayView extends ItemView {
 		}
 
 		if (!this.plugin.isExtracting && !this.plugin.activeNotehaveUrl) {
-			console.log("null activeNotehaveUrl")
-			container.createEl("p", { text: "No legal URL found in this note 😄" });
+			container.createEl("p", { text: "No valid URL found in this note 😄" });
 		}
 
 		if (this.plugin.isParsing) {
-			console.log("isParsing");
 			// container.createEl("p", { text: "Parsing..." });
 			this.parsing(container);
 		}
@@ -54,7 +51,6 @@ export class UrlDisplayView extends ItemView {
 	}
 
 	public readonly updateList = (container: Element): void => {
-		console.log("start updateList")
 		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
 		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
 
@@ -101,13 +97,11 @@ export class UrlDisplayView extends ItemView {
 		menu
 			.addItem((item) => {
 				item
-					.setTitle('Refresh Url')
+					.setTitle('Refresh list')
 					.setIcon('refresh-cw')
 					.onClick(async () => {
-						console.log("start refresh");
 						this.plugin.initState();
 						this.plugin.updateUrl();
-						console.log("end refresh");
 					});
 			})
 	}

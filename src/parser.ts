@@ -18,28 +18,23 @@ abstract class Parser {
 	}
 
 	public async parse(url: string): Promise<CacheData> {
-		console.log('parse', url);
-
 		const cacheData = await this.cache.getUrlMetadata(url);
 		if (cacheData) {
 			if (this.plugin.settings.cacheMode === "memoryCache") {
-				console.log("start memoryCache");
 				return { title: cacheData.title, icon: await Parser.encodedIcon(cacheData.icon) };
 			}
 			return { ...cacheData };
 		}
 
-		console.log('start api');
+		// console.log('api', api);
 		const requestAPI = Mustache.render(this.api, { url });
 		const res = await requestUrl({ url: requestAPI });
 		const resData = res.json;
 		const processData = await this.process(resData);
-		console.log('end api');
 
 		await this.cache.saveUrlMetadata(url, processData);
 
 		if (this.plugin.settings.cacheMode === "memoryCache") {
-			console.log("start memoryCache");
 			return { title: processData.title, icon: await Parser.encodedIcon(processData.icon) };
 		}
 
@@ -65,8 +60,6 @@ export class MicroLinkParser extends Parser {
 	public override async process(data: any): Promise<CacheData> {
 		const title = data.data.title || "Untitled";
 		const icon = data.data.logo?.url || data.data.image?.url || "";
-		console.log('title', title);
-		console.log('icon', icon);
 
 		return { title, icon };
 	}
@@ -81,8 +74,6 @@ export class JSONLinkParser extends Parser {
 	public override async process(data: any): Promise<{ title: string; icon: string }> {
 		const title = data.title || "Untitled";
 		const icon = data.images[0] || "";
-		console.log('title', title);
-		console.log('icon', icon);
 
 		return { title, icon };
 	}

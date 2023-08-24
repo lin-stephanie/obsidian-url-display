@@ -14,8 +14,19 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
+        .setName('Deduplicate URLs')
+        .setDesc('If enabled, 2 same URLs in the note will only display once.')
+        .addToggle(value => value
+            .setValue(this.plugin.settings.deduplicateUrls)
+            .onChange((value) => {
+                this.plugin.settings.deduplicateUrls = value;
+                this.plugin.saveSettings();
+            })
+        );
+
+        new Setting(containerEl)
             .setName('Use alias')
-            .setDesc('By default, the website title from URL metadata is used as the display text. If enabled, the external link text in brackets ([]) will be used.')
+            .setDesc('By default, the website title from URL metadata is used as the display text. If enabled, the text in brackets ([]) will be used.')
             .addToggle(value => value
                 .setValue(this.plugin.settings.useAlias)
                 .onChange((value) => {
@@ -35,20 +46,11 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
                 })
             );
 
-        new Setting(containerEl)
-            .setName('Deduplicate URLs')
-            .setDesc('If enabled, 2 same URLs in the markdown will only display once.')
-            .addToggle(value => value
-                .setValue(this.plugin.settings.deduplicateUrls)
-                .onChange((value) => {
-                    this.plugin.settings.deduplicateUrls = value;
-                    this.plugin.saveSettings();
-                })
-            );
+
 
         new Setting(containerEl)
             .setName('Cache mode')
-            .setDesc('Choose cache mode for saving favicons.')
+            .setDesc('Choose cache mode for saving favicons. This will only take effect when show favicon is set to true.')
             .addDropdown((value) => {
                 value
                     .addOptions({ diskCache: 'disk cache', memoryCache: 'memory cache' })
@@ -61,7 +63,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Notice mode')
-            .setDesc('You can customize the type of notifications when Url parsing finishes.')
+            .setDesc('You can customize the type of notifications when URL parsing finishes.')
             .addDropdown((value) => {
                 value
                     .addOptions({ none: 'none', successful: 'successful', failed: 'failed', both: 'both' })

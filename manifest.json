@@ -3,9 +3,8 @@
 	"name": "URL Display",
 	"version": "1.0.0-alpha",
 	"minAppVersion": "0.15.0",
-	"description": "Extract and display URLs of notes in Obsidian.",
-	"author": "Stephaine Lin",
+	"description": "Extract and display external URLs of the note in Obsidian.",
+	"author": "stephanie Lin",
 	"authorUrl": "https://github.com/lin-stephanie",
-	"fundingUrl": "",
 	"isDesktopOnly": false
 }

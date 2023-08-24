@@ -1,15 +1,16 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-url-display",
 	"version": "1.0.0-alpha",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Extract and display external URLs of the note in Obsidian.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint . --ext .ts --fix",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "stephanie Lin",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/mustache": "^4.2.2",

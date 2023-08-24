@@ -8,17 +8,17 @@ export const SPECIAL = /(\?target=){1}(?<target>https?.*)/g;
 export const EXCLUDE = /https?:\/\/.*?(apng|avif|bmp|gif|ico|jpeg|jpg|png|svg|tif|tiff|webp)/g;
 
 export interface UrlDisplaySettings {
+    deduplicateUrls: boolean;
     useAlias: boolean;
     showFavicon: boolean;
-    deduplicateUrls: boolean;
     cacheMode: string;
     noticeMode: string;
 }
 
 export const DEFAULT_SETTINGS: UrlDisplaySettings = {
+    deduplicateUrls: true,
     useAlias: false,
     showFavicon: true,
-    deduplicateUrls: true,
     cacheMode: 'diskCache',
     noticeMode: 'both',
 }

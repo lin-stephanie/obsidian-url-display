@@ -9,8 +9,6 @@ import { VIEW_TYPE, DEFAULT_SETTINGS, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE
 
 export default class UrlDisplayPlugin extends Plugin {
 	public settings: UrlDisplaySettings;
-	public view: UrlDisplayView;
-
 	public isExtracting: boolean | undefined;
 	public isParsing: boolean | undefined;
 	public activeNotehaveUrl: boolean | undefined;
@@ -20,16 +18,14 @@ export default class UrlDisplayPlugin extends Plugin {
 	private parser: MicroLinkParser;
 
 	public override async onload() {
-		console.clear();
+		// console.clear();
 		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
 		await this.loadSettings();
+
 		this.addSettingTab(new UrlDisplaySettingTab(this.app, this));
 
-		this.registerView(
-			VIEW_TYPE,
-			(leaf) => (this.view = new UrlDisplayView(leaf, this)),
-		);
+		this.registerView(VIEW_TYPE, (leaf) => new UrlDisplayView(leaf, this));
 
 		this.addRibbonIcon('external-link', 'Open URL Dispaly', (evt: MouseEvent) => {
 			this.isOpen();
@@ -37,7 +33,7 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'url-display-open',
-			name: 'Open or close Pane',
+			name: 'Open or close pane',
 			checkCallback: (checking: boolean) => {
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
@@ -51,9 +47,8 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'url-display-refresh',
-			name: 'Refresh URL list',
+			name: 'Refresh list',
 			checkCallback: (checking: boolean) => {
-				console.log("checking", checking);
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
 				if (markdownView && urlDisplayView) {
@@ -67,9 +62,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		});
 
 		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
-			console.log("start active-leaf-change");
 			this.isActive(leaf);
-			console.log("end active-leaf-change");
 		}));
 
 		this.cache = new IndexedDBCache();
@@ -86,10 +79,8 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private readonly isActive = (leaf?: WorkspaceLeaf | null) => {
 		if (leaf && leaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-			console.log("start isActive");
 			this.initState();
 			this.updateUrl();
-			console.log("end isActive");
 		} else {
 			return;
 		}
@@ -107,13 +98,11 @@ export default class UrlDisplayPlugin extends Plugin {
 		// const activeFile = this.app.workspace.getActiveFile();
 		// if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
 		if (this.app.workspace.getActiveViewOfType(MarkdownView)) {
-			console.log("is MarkdownView");
 			this.initState();
 			this.activateView();
 		} else {
 			// this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-			console.log("no MarkdownView");
-			new Notice("Move focus into a markdown file 😉");
+			new Notice("Move focus into a note 😉");
 		}
 	}
 
@@ -125,8 +114,6 @@ export default class UrlDisplayPlugin extends Plugin {
 	}
 
 	private readonly activateView = async () => {
-		console.log("start activateView");
-
 		await this.app.workspace.getRightLeaf(false).setViewState({
 			type: VIEW_TYPE,
 			active: true,
@@ -135,31 +122,25 @@ export default class UrlDisplayPlugin extends Plugin {
 		this.app.workspace.revealLeaf(
 			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
 		);
-
-		console.log("end activateView");
 	}
 
 	public readonly updateUrl = UrlDisplayPlugin.debounce(async () => {
-		console.log("start updateUrl")
 		const activeNoteUrl = await this.extractUrl(this.app.workspace.getActiveFile());
-		console.log("end extractUrl")
 		this.isExtracting = false;
 
 		if (!activeNoteUrl) {
 			this.activeNotehaveUrl = false;
-			this.view.updateDisplay();
+			this.updateView();
 		} else {
 			this.activeNotehaveUrl = true;
 			this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
-			this.view.updateDisplay();
+			this.updateView();
 		}
-
-		console.log("end updateUrl")
 	})
 
 	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
-		console.log("start extractUrl")
 		this.isExtracting = true;
+		this.updateView();
 
 		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
 			// const md = await this.app.vault.read(activeFile);
@@ -169,10 +150,8 @@ export default class UrlDisplayPlugin extends Plugin {
 	}
 
 	private readonly parseUrl = async (activeNoteUrl: string[]): Promise<UrlParse[]> => {
-		console.log("start parseUrl")
 		this.isParsing = true;
-		this.view.updateDisplay();
-
+		this.updateView();
 		const cleanedUrls = this.convertToObject(activeNoteUrl);
 
 		if (this.settings.useAlias && !this.settings.showFavicon) {
@@ -183,33 +162,26 @@ export default class UrlDisplayPlugin extends Plugin {
 			return cleanedUrls;
 		} else {
 			let failedCount = 0;
-			console.log('cacheMode', this.settings.cacheMode);
-
 			for (const cleanedUrl of cleanedUrls) {
 				try {
 					const data = await this.parser.parse(cleanedUrl.link);
 					cleanedUrl.title = data.title;
 					cleanedUrl.icon = data.icon;
 				} catch (error) {
-					console.log('error', error);
 					failedCount += 1;
 				}
 			}
-
 			if (failedCount === 0 && (this.settings.noticeMode === "successful" || this.settings.noticeMode === "both")) {
 				new Notice("Successfully parsed all URLs 🎉");
 			} else if (failedCount !== 0 && (this.settings.noticeMode === "failed" || this.settings.noticeMode === "both")) {
 				new Notice(`Failed to parse ${failedCount} URLs 😥`);
 			}
-
 			this.isParsing = false;
-			console.log("end parseUrl");
 			return cleanedUrls;
 		}
 	}
 
 	private readonly convertToObject = (activeNoteUrl: string[]): UrlParse[] => {
-		console.log("start convertToObject");
 		let UrlObject = [];
 
 		for (const url of activeNoteUrl) {
@@ -228,13 +200,10 @@ export default class UrlDisplayPlugin extends Plugin {
 		}
 
 		UrlObject = this.cleanUrl(UrlObject);
-		console.log("end cleanUrl", UrlObject);
 		return UrlObject;
 	}
 
 	private readonly cleanUrl = (UrlObject: UrlParse[]): UrlParse[] => {
-		console.log("start cleanUrl", UrlObject);
-
 		if (this.settings.deduplicateUrls) {
 			UrlObject = UrlDisplayPlugin.deduplicateObjArrByUniId(UrlObject, "link");
 		}
@@ -244,13 +213,20 @@ export default class UrlDisplayPlugin extends Plugin {
 			for (const match of url.link.matchAll(SPECIAL)) {
 				if (match.groups) {
 					url.link = decodeURIComponent(match.groups.target);
-					console.log("cleaned", url.link);
 				}
 			}
 		}
 
-		console.log("end cleanUrl");
 		return UrlObject;
+	}
+
+	private readonly updateView = (): void => {
+		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
+			const view = leaf.view;
+			if (view instanceof UrlDisplayView) {
+				view.updateDisplay();
+			}
+		}
 	}
 
 	private static deduplicateObjArrByUniId = (arr: UrlParse[], uniId: string): UrlParse[] => {
