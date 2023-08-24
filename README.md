@@ -28,17 +28,18 @@ If you are interested, you can go to [Polls](https://github.com/lin-stephanie/ob
 - Right select on the plugin icon in the sidebar and select `Refresh list`, or:
 - Open the command palette and select the command `URL Display: Refresh list`
 
-### Tips
-- Normally, when you switch between different notes, the URL List will be automatically updated.
-- After you modify URL in the active note, you need to manually refresh the URL list as mentioned above.
-- Note that if you enable show favicon or turn off use alias in the plugin settings, the plugin needs to request URL metadata, which will take a certain amount of time. During this period, you can do other things first.
-
 ### Supported URL formats
 ```md
 https://example.org
 [Alias](https://example.org)
 [](https://example.org)
 ```
+
+### Tips
+- Normally, when you switch between different notes, the URL List will be automatically updated.
+- After you modify URL in the active note, you need to manually refresh the URL list as mentioned above.
+- Note that if you enable show favicon or turn off use alias in the plugin settings, the plugin needs to request URL metadata, which will take a certain amount of time. During this period, you can do other things first.
+
 ## Settings
 
 |        Item                               |        Description                                                                                                                                                                                                                                   |     Value                                    |        Default             |
