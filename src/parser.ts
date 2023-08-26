@@ -54,7 +54,7 @@ abstract class Parser {
 export class MicroLinkParser extends Parser {
 	constructor(plugin: UrlDisplayPlugin, cache: IndexedDBCache) {
 		super(plugin, cache);
-		this.api = 'https://api.microlink.io?url={{{url}}}&palette=true&audio=true&video=true&iframe=true';
+		this.api = 'https://api.microlink.io?url={{{url}}}';
 	}
 
 	public override async process(data: any): Promise<CacheData> {

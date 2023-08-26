@@ -6,7 +6,7 @@ export class IndexedDBCache {
 
     public constructor() {
         this.store = localforage.createInstance({
-            name: "urldispaly-cache",
+            name: "urldisplay-cache",
             storeName: "urlMetadata",
             driver: [localforage.INDEXEDDB],
             description: "Cache URL metadata."

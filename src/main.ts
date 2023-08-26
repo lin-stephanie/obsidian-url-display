@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Notice, Plugin, TFile, debounce } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -28,17 +28,17 @@ export default class UrlDisplayPlugin extends Plugin {
 		this.registerView(VIEW_TYPE, (leaf) => new UrlDisplayView(leaf, this));
 
 		this.addRibbonIcon('external-link', 'Open URL Dispaly', (evt: MouseEvent) => {
-			this.isOpen();
+			this.openOrClosePane();
 		});
 
 		this.addCommand({
-			id: 'url-display-open',
+			id: 'open-or-close-pane',
 			name: 'Open or close pane',
 			checkCallback: (checking: boolean) => {
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
 					if (!checking) {
-						this.isOpen();
+						this.openOrClosePane();
 					}
 					return true;
 				}
@@ -46,7 +46,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'url-display-refresh',
+			id: 'refresh-list',
 			name: 'Refresh list',
 			checkCallback: (checking: boolean) => {
 				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -62,7 +62,12 @@ export default class UrlDisplayPlugin extends Plugin {
 		});
 
 		this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
-			this.isActive(leaf);
+			if (leaf && leaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
+				this.initState();
+				this.updateUrl();
+			} else {
+				return;
+			}
 		}));
 
 		this.cache = new IndexedDBCache();
@@ -77,29 +82,26 @@ export default class UrlDisplayPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	private readonly isActive = (leaf?: WorkspaceLeaf | null) => {
-		if (leaf && leaf.getViewState().type === "markdown" && this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
-			this.initState();
-			this.updateUrl();
-		} else {
-			return;
-		}
-	}
-
-	private readonly isOpen = () => {
+	private readonly openOrClosePane = () => {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]) {
 			this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 		} else {
-			this.isMarkdownView();
+			this.activateView();
 		}
 	}
 
-	private readonly isMarkdownView = async () => {
+	private readonly activateView = async () => {
 		// const activeFile = this.app.workspace.getActiveFile();
 		// if (activeFile && activeFile.extension && (String(activeFile.extension).toLowerCase() === "md")) {
 		if (this.app.workspace.getActiveViewOfType(MarkdownView)) {
 			this.initState();
-			this.activateView();
+			await this.app.workspace.getRightLeaf(false).setViewState({
+				type: VIEW_TYPE,
+				active: true,
+			});
+			this.app.workspace.revealLeaf(
+				this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
+			);
 		} else {
 			// this.app.workspace.detachLeavesOfType(VIEW_TYPE);
 			new Notice("Move focus into a note 😉");
@@ -113,18 +115,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		this.activeNoteUrlParse = null;
 	}
 
-	private readonly activateView = async () => {
-		await this.app.workspace.getRightLeaf(false).setViewState({
-			type: VIEW_TYPE,
-			active: true,
-		});
-
-		this.app.workspace.revealLeaf(
-			this.app.workspace.getLeavesOfType(VIEW_TYPE)[0]
-		);
-	}
-
-	public readonly updateUrl = UrlDisplayPlugin.debounce(async () => {
+	public readonly updateUrl = debounce(async () => {
 		const activeNoteUrl = await this.extractUrl(this.app.workspace.getActiveFile());
 		this.isExtracting = false;
 
@@ -136,7 +127,7 @@ export default class UrlDisplayPlugin extends Plugin {
 			this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
 			this.updateView();
 		}
-	})
+	}, 1000, true)
 
 	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
 		this.isExtracting = true;
@@ -234,13 +225,13 @@ export default class UrlDisplayPlugin extends Plugin {
 		return arr.filter((item) => !res.has(item[uniId as keyof UrlParse]) && res.set(item[uniId as keyof UrlParse], 1));
 	}
 
-	private static debounce = (fn: () => void, ms = 1000) => {
-		let timeoutId: ReturnType<typeof setTimeout>;
-		return function () {
-			clearTimeout(timeoutId);
-			timeoutId = setTimeout(() => fn.apply(this), ms);
-		};
-	};
+	// private static debounce = (fn: () => void, ms = 1000) => {
+	// 	let timeoutId: ReturnType<typeof setTimeout>;
+	// 	return function () {
+	// 		clearTimeout(timeoutId);
+	// 		timeoutId = setTimeout(() => fn.apply(this), ms);
+	// 	};
+	// };
 
 	public override onunload() {
 		console.log("unloading obsidian-url-display plugin v" + this.manifest.version);
