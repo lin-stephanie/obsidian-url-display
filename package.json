@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-url-display",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Extract and display external URLs of the note in Obsidian.",
 	"main": "main.js",
 	"scripts": {
@@ -11,7 +11,7 @@
 	},
 	"keywords": [],
 	"author": "Stephanie Lin",
-	"license": "MIT",
+	"license": "GPL-3.0",
 	"devDependencies": {
 		"@types/mustache": "^4.2.2",
 		"@types/node": "^16.11.6",
