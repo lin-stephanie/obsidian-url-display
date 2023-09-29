@@ -23,7 +23,7 @@ abstract class Parser {
 			if (this.plugin.settings.cacheMode === "memoryCache") {
 				return { title: cacheData.title, icon: await Parser.encodedIcon(cacheData.icon) };
 			}
-			return { ...cacheData };
+			return cacheData;
 		}
 
 		// console.log('api', api);
@@ -38,7 +38,7 @@ abstract class Parser {
 			return { title: processData.title, icon: await Parser.encodedIcon(processData.icon) };
 		}
 
-		return { ...processData };
+		return processData;
 	}
 
 	public abstract process(data: ResponseData): Promise<CacheData>;

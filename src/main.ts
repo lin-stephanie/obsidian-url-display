@@ -125,17 +125,21 @@ export default class UrlDisplayPlugin extends Plugin {
 		} else {
 			this.activeNotehaveUrl = true;
 			this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
+			// console.log(this.activeNoteUrlParse);
 			this.updateView();
 		}
 	}, 1000, true)
 
 	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
+		// console.log(activeFile);
+
 		this.isExtracting = true;
 		this.updateView();
 
 		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
 			// const md = await this.app.vault.read(activeFile);
 			const activeFilContent = await this.app.vault.cachedRead(activeFile);
+			// console.log(activeFilContent);
 			return activeFilContent.match(EXTERNAL_LINK);
 		}
 	}
@@ -143,6 +147,7 @@ export default class UrlDisplayPlugin extends Plugin {
 	private readonly parseUrl = async (activeNoteUrl: string[]): Promise<UrlParse[]> => {
 		this.isParsing = true;
 		this.updateView();
+		console.log(activeNoteUrl);
 		const cleanedUrls = this.convertToObject(activeNoteUrl);
 
 		if (this.settings.useAlias && !this.settings.showFavicon) {
@@ -173,10 +178,12 @@ export default class UrlDisplayPlugin extends Plugin {
 	}
 
 	private readonly convertToObject = (activeNoteUrl: string[]): UrlParse[] => {
-		let UrlObject = [];
+		let UrlObject: { alias: string; link: string; }[] = [];
 
 		for (const url of activeNoteUrl) {
-			const unmatch = [...url.matchAll(PARTITION)]
+			const unmatch = [...url.matchAll(PARTITION)];
+
+			// exclude .jpg etc
 			// case1："https://obsidian.md/"（unmatch is an empty array）
 			if (unmatch.length === 0 && !EXCLUDE.test(url)) {
 				UrlObject.push({ alias: "", link: url });
@@ -191,6 +198,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		}
 
 		UrlObject = this.cleanUrl(UrlObject);
+		console.log(UrlObject);
 		return UrlObject;
 	}
 
@@ -201,16 +209,16 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		// handle url like: "https://link.zhihu.com/?target=https%3A//conventionalcommits.org/"
 		for (const url of UrlObject) {
-			for (const match of url.link.matchAll(SPECIAL)) {
-				if (match.groups) {
-					url.link = decodeURIComponent(match.groups.target);
-				}
+			const result = url.link.match(SPECIAL);
+			if (result) {
+				url.link = decodeURIComponent(result[1]);
 			}
 		}
 
 		return UrlObject;
 	}
 
+	// https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Avoid+managing+references+to+custom+views
 	private readonly updateView = (): void => {
 		for (const leaf of this.app.workspace.getLeavesOfType(VIEW_TYPE)) {
 			const view = leaf.view;
