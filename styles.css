@@ -1,73 +1,108 @@
 .url-display-item {
-    padding-left: 8px;
-}
-
-.url-display-item:hover {
-    cursor: pointer;
+	display: flex;
+	align-items: center;
+	padding: 6px 8px 6px 8px;
+	margin-bottom: 0;
 }
 
 .url-display-link {
-    display: flex;
-    align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 .url-display-link:link {
-    color: inherit;
-    text-decoration: none;
+	width: 100%;
+	color: inherit;
+	text-decoration: none;
 }
 
 .url-display-img {
-    width: 20px;
-    height: 100%;
-    /* border-radius: 50%; */
+	width: 20px;
+	height: 100%;
+	/* border-radius: 50%; */
 }
 
 .url-display-text {
-    padding-left: 8px;
+	padding-left: 10px;
+}
+
+.url-display-optiion {
+	display: none;
+	color: var(--nav-item-color);
+}
+
+.url-display-item:hover .url-display-optiion {
+	display: flex;
+	align-items: center;
+	height: 16px;
+	padding: 0 3px;
+	cursor: pointer;
+}
+
+/* .lucide-flag-triangle-right path, */
+/* .lucide-locate-fixed circle, */
+/* .lucide-locate-fixed line, */
+.lucide-navigation polygon, 
+.lucide-search circle, 
+.lucide-search line,
+.lucide-copy rect, 
+.lucide-copy path{
+    transition: stroke 0.3s ease;
+}
+
+/* .lucide-flag-triangle-right:hover path, */
+/* .lucide-locate-fixed:hover circle, */
+/* .lucide-locate-fixed:hover line, */
+.lucide-navigation:hover polygon,
+.lucide-search:hover circle, 
+.lucide-search:hover line,
+.lucide-copy:hover rect, 
+.lucide-copy:hover path{
+    stroke: var(--interactive-accent);
 }
 
 .skeleton {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
 }
 
 .skeleton-square {
-    flex: 1;
-    height: 20px;
-    border-radius: 5px;
-    margin-right: 8px;
-    background: linear-gradient(to right, rgba(130, 130, 130, 0.2) 8%, rgba(130, 130, 130, 0.3) 18%, rgba(130, 130, 130, 0.2) 33%);
-    background-size: 800px 100px;
-    animation: wave-squares 2s infinite ease-out;
+	flex: 1;
+	height: 20px;
+	border-radius: 5px;
+	margin-right: 8px;
+	background: linear-gradient(to right, rgba(130, 130, 130, 0.2) 8%, rgba(130, 130, 130, 0.3) 18%, rgba(130, 130, 130, 0.2) 33%);
+	background-size: 800px 100px;
+	animation: wave-squares 2s infinite ease-out;
 }
 
 .skeleton-line {
-    flex: 10;
-    height: 20px;
-    border-radius: 2px;
-    background: linear-gradient(to right, rgba(130, 130, 130, 0.2) 8%, rgba(130, 130, 130, 0.3) 18%, rgba(130, 130, 130, 0.2) 33%);
-    background-size: 800px 100px;
-    animation: wave-lines 2s infinite ease-out;
+	flex: 10;
+	height: 20px;
+	border-radius: 2px;
+	background: linear-gradient(to right, rgba(130, 130, 130, 0.2) 8%, rgba(130, 130, 130, 0.3) 18%, rgba(130, 130, 130, 0.2) 33%);
+	background-size: 800px 100px;
+	animation: wave-lines 2s infinite ease-out;
 }
 
 @keyframes wave-lines {
-    0% {
-        background-position: -468px 0;
-    }
+	0% {
+		background-position: -468px 0;
+	}
 
-    100% {
-        background-position: 468px 0;
-    }
+	100% {
+		background-position: 468px 0;
+	}
 }
 
 @keyframes wave-squares {
-    0% {
-        background-position: -468px 0;
-    }
+	0% {
+		background-position: -468px 0;
+	}
 
-    100% {
-        background-position: 468px 0;
-    }
+	100% {
+		background-position: 468px 0;
+	}
 }

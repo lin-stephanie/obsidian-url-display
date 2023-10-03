@@ -1,19 +1,11 @@
 /* eslint-disable no-useless-escape */
+import type { UrlDisplaySettings } from "./types"
 
 export const VIEW_TYPE = "url-display";
-
 export const EXTERNAL_LINK = /(\[([^\[\]]+?)?\]\()?https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/='" ]*)\)?/g;
 export const PARTITION = /\[(?<alias>.*?)\]\((?<link>.+?)\)/g;
 export const SPECIAL = /\?target=([^&\s]+)/;
 export const EXCLUDE = /\.(apng|avif|bmp|gif|ico|jpeg|jpg|png|svg|tif|tiff|webp)$/;
-
-export interface UrlDisplaySettings {
-    deduplicateUrls: boolean;
-    useAlias: boolean;
-    showFavicon: boolean;
-    cacheMode: string;
-    noticeMode: string;
-}
 
 export const DEFAULT_SETTINGS: UrlDisplaySettings = {
     deduplicateUrls: true,
@@ -23,18 +15,3 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
     noticeMode: 'both',
 }
 
-export interface UrlParse {
-    alias: string;
-    link: string;
-    title?: string;
-    icon?: string;
-}
-
-export interface ResponseData {
-    [key: string]: object | string | number,
-}
-
-export interface CacheData {
-    title: string;
-    icon: string;
-}
