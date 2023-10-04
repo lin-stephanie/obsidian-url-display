@@ -4,7 +4,8 @@ import UrlDisplayPlugin from "./main";
 import { UrlDisplayView } from "./views"
 import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
-import type { UrlParse, } from "./types"
+import { deduplicateObjArrByUniId } from "./utils"
+import type { UrlParse } from "./types"
 import { VIEW_TYPE, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE } from "./constants"
 
 
@@ -13,7 +14,6 @@ export class markdownProcessor {
 	private cache: IndexedDBCache;
 	private parser: MicroLinkParser;
 
-	// public activeMarkdownView: MarkdownView;
 	public isExtracting: boolean;
 	public isParsing: boolean;
 	public activeNotehaveUrl: boolean;
@@ -28,18 +28,18 @@ export class markdownProcessor {
 	public readonly process = debounce(async (markdownView: MarkdownView | null) => {
 		this.initState();
 		if (markdownView) {
-			// this.activeMarkdownView = markdownView;
 			const activeNoteUrl = await this.extractUrl(markdownView.file);
 			this.isExtracting = false;
-
 			if (!activeNoteUrl) {
-				this.activeNotehaveUrl = false;
 				this.updateView();
 			} else {
 				this.activeNotehaveUrl = true;
 				this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
-				// console.log(this.activeNoteUrlParse);
-				this.updateView(markdownView);
+				// avoid race condition
+				const currentMarkdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+				if (currentMarkdownView?.file?.path === markdownView.file?.path) {
+					this.updateView(markdownView);
+				}
 			}
 		} else {
 			this.updateView();
@@ -54,12 +54,9 @@ export class markdownProcessor {
 	}
 
 	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
-		// console.log(activeFile);
 		this.isExtracting = true;
 		this.updateView();
-
-		if (activeFile && (String(activeFile.extension).toLowerCase() === "md")) {
-			// const md = await this.app.vault.read(activeFile);
+		if (activeFile) {
 			const activeFilContent = await this.plugin.app.vault.cachedRead(activeFile);
 			return activeFilContent.match(EXTERNAL_LINK);
 		}
@@ -68,7 +65,6 @@ export class markdownProcessor {
 	private readonly parseUrl = async (activeNoteUrl: string[]): Promise<UrlParse[]> => {
 		this.isParsing = true;
 		this.updateView();
-		// console.log(activeNoteUrl);
 		const cleanedUrls = this.convertToObject(activeNoteUrl);
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
@@ -119,13 +115,12 @@ export class markdownProcessor {
 		}
 
 		UrlObject = this.cleanUrl(UrlObject);
-		// console.log(UrlObject);
 		return UrlObject;
 	}
 
 	private readonly cleanUrl = (UrlObject: UrlParse[]): UrlParse[] => {
 		if (this.plugin.settings.deduplicateUrls) {
-			UrlObject = markdownProcessor.deduplicateObjArrByUniId(UrlObject, "link");
+			UrlObject = deduplicateObjArrByUniId(UrlObject, "link");
 		}
 
 		// handle url like: "https://link.zhihu.com/?target=https%3A//conventionalcommits.org/"
@@ -139,11 +134,6 @@ export class markdownProcessor {
 		return UrlObject;
 	}
 
-	private static deduplicateObjArrByUniId = (arr: UrlParse[], uniId: string): UrlParse[] => {
-		const res = new Map();
-		return arr.filter((item) => !res.has(item[uniId as keyof UrlParse]) && res.set(item[uniId as keyof UrlParse], 1));
-	}
-
 	// https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Avoid+managing+references+to+custom+views
 	private readonly updateView = (markdownView?: MarkdownView): void => {
 		for (const leaf of this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE)) {
@@ -153,5 +143,4 @@ export class markdownProcessor {
 			}
 		}
 	}
-
 }

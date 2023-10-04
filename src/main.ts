@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, TFile } from "obsidian";
+import { MarkdownView, Notice, Plugin } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -16,7 +16,7 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		await this.loadSettings();
 		this.addSettingTab(new UrlDisplaySettingTab(this.app, this));
-		this.addRibbonIcon('external-link', 'Open or close URL dispaly', (evt: MouseEvent) => {
+		this.addRibbonIcon('external-link', 'Open or close url display', (evt: MouseEvent) => {
 			this.openOrClosePane();
 		});
 		this.registerView(VIEW_TYPE, (leaf) => new UrlDisplayView(leaf, this, this.processor));
@@ -67,13 +67,8 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private registerListener() {
 		this.registerEvent(this.app.workspace.on('file-open', (file) => {
-			console.log('file-open', file);
-			// console.log('currentMarkdownFile', this.currentMarkdownView?.file);
-
 			const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			console.log('currentMarkdownView', currentMarkdownView);
 			this.processor.process(currentMarkdownView);
-			
 		}));
 	}
 	

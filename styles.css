@@ -34,14 +34,11 @@
 .url-display-item:hover .url-display-optiion {
 	display: flex;
 	align-items: center;
-	height: 16px;
+	height: 16.9px;
 	padding: 0 3px;
 	cursor: pointer;
 }
 
-/* .lucide-flag-triangle-right path, */
-/* .lucide-locate-fixed circle, */
-/* .lucide-locate-fixed line, */
 .lucide-navigation polygon, 
 .lucide-search circle, 
 .lucide-search line,
@@ -50,9 +47,6 @@
     transition: stroke 0.3s ease;
 }
 
-/* .lucide-flag-triangle-right:hover path, */
-/* .lucide-locate-fixed:hover circle, */
-/* .lucide-locate-fixed:hover line, */
 .lucide-navigation:hover polygon,
 .lucide-search:hover circle, 
 .lucide-search:hover line,
