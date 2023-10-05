@@ -8,10 +8,10 @@ export const EXCLUDE = ['.avif', '.apng','.jpg', '.jpeg', '.png', '.gif', '.svg'
 export const SPECIAL = /\?target=([^&\s]+)/;
 
 export const DEFAULT_SETTINGS: UrlDisplaySettings = {
-    deduplicateUrls: true,
-    useAlias: false,
-    showFavicon: true,
+    deduplicateUrls: false,
+    useAlias: true,
+    showFavicon: false,
     cacheMode: 'diskCache',
-    noticeMode: 'both',
+    noticeMode: 'none',
 }
 
