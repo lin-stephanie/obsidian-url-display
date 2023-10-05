@@ -6,7 +6,7 @@ import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
 import { deduplicateObjArrByUniId } from "./utils"
 import type { UrlParse } from "./types"
-import { VIEW_TYPE, EXTERNAL_LINK, PARTITION, SPECIAL, EXCLUDE } from "./constants"
+import { VIEW_TYPE, EXTERNAL_LINK, URLREGEX, SPECIAL, EXCLUDE } from "./constants"
 
 
 export class markdownProcessor {
@@ -16,8 +16,10 @@ export class markdownProcessor {
 
 	public isExtracting: boolean;
 	public isParsing: boolean;
+	public activeMarkdownView: MarkdownView | null;
 	public activeNotehaveUrl: boolean;
-	public activeNoteUrlParse: UrlParse[] | null;
+	public activeNoteUrlParse: UrlParse[] | null | undefined;
+	
 
 	constructor(plugin: UrlDisplayPlugin) {
 		this.plugin = plugin;
@@ -27,18 +29,27 @@ export class markdownProcessor {
 
 	public readonly process = debounce(async (markdownView: MarkdownView | null) => {
 		this.initState();
-		if (markdownView) {
-			const activeNoteUrl = await this.extractUrl(markdownView.file);
+		this.activeMarkdownView = markdownView;
+
+		if (this.activeMarkdownView) {
+			const activeNoteUrl = await this.extractUrl(this.activeMarkdownView.file);
 			this.isExtracting = false;
 			if (!activeNoteUrl) {
 				this.updateView();
 			} else {
 				this.activeNotehaveUrl = true;
-				this.activeNoteUrlParse = await this.parseUrl(activeNoteUrl);
-				// avoid race condition
+				this.activeNoteUrlParse = await this.parseUrl(this.activeMarkdownView);
+				console.log(this.activeNoteUrlParse);
+				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
+				// if currentMarkdownView is null, it means that the user is clicking ribbon icon
+				// WARN: cannot use this.activeMarkdownView(the reference has changed) but markdownView(the reference in the closure)
 				const currentMarkdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-				if (currentMarkdownView?.file?.path === markdownView.file?.path) {
-					this.updateView(markdownView);
+				if (currentMarkdownView) {
+					if (currentMarkdownView.file?.path === markdownView?.file?.path) {
+						this.updateView();
+					}
+				} else {
+					this.updateView();
 				}
 			}
 		} else {
@@ -56,16 +67,20 @@ export class markdownProcessor {
 	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
 		this.isExtracting = true;
 		this.updateView();
+
 		if (activeFile) {
 			const activeFilContent = await this.plugin.app.vault.cachedRead(activeFile);
 			return activeFilContent.match(EXTERNAL_LINK);
 		}
 	}
 
-	private readonly parseUrl = async (activeNoteUrl: string[]): Promise<UrlParse[]> => {
+	private readonly parseUrl = async (markdownView: MarkdownView): Promise<UrlParse[] | undefined>  => {
 		this.isParsing = true;
 		this.updateView();
-		const cleanedUrls = this.convertToObject(activeNoteUrl);
+
+		// the same: const activeFilContent = await this.plugin.app.vault.cachedRead(markdownView.file as TFile);
+		const activeFilContent = markdownView.editor.getValue();
+		const cleanedUrls = this.locateUrl(activeFilContent);
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
 			if (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both") {
@@ -94,30 +109,32 @@ export class markdownProcessor {
 		}
 	}
 
-	private readonly convertToObject = (activeNoteUrl: string[]): UrlParse[] => {
-		let UrlObject: { alias: string; link: string; }[] = [];
+	private readonly locateUrl = (content: string): UrlParse[] => {
+		let match;
+		let UrlObject: UrlParse[] = [];
 
-		for (const url of activeNoteUrl) {
-			const unmatch = [...url.matchAll(PARTITION)];
+		while (match = URLREGEX.exec(content)) {
+			let alias = match[1] || '';
+			let link = match[2] || match[3];
 
-			// exclude .jpg etc
-			// case1："https://obsidian.md/"（unmatch is an empty array）
-			if (unmatch.length === 0 && !EXCLUDE.test(url)) {
-				UrlObject.push({ alias: "", link: url });
+			// check if the URL has an excluded extension
+			if (EXCLUDE.some(ext => link.endsWith(ext))) {
 				continue;
 			}
-			// case2："[]()"
-			for (const match of url.matchAll(PARTITION)) {
-				if (match.groups && !EXCLUDE.test(match.groups.link)) {
-					UrlObject.push({ alias: match.groups.alias, link: match.groups.link });
-				}
-			}
+
+			const index = match.index;
+			const lines = content.substring(0, index).split('\n');
+			const line = lines.length-1;
+			// const ch = lines[line - 1].length;
+
+			UrlObject.push({ alias, link, line });
 		}
 
 		UrlObject = this.cleanUrl(UrlObject);
 		return UrlObject;
 	}
 
+	// remove duplicates & handle special formatted URLs 
 	private readonly cleanUrl = (UrlObject: UrlParse[]): UrlParse[] => {
 		if (this.plugin.settings.deduplicateUrls) {
 			UrlObject = deduplicateObjArrByUniId(UrlObject, "link");
@@ -131,15 +148,15 @@ export class markdownProcessor {
 			}
 		}
 
-		return UrlObject;
+		return UrlObject
 	}
 
 	// https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Avoid+managing+references+to+custom+views
-	private readonly updateView = (markdownView?: MarkdownView): void => {
+	private readonly updateView = (): void => {
 		for (const leaf of this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE)) {
 			const view = leaf.view;
 			if (view instanceof UrlDisplayView) {
-				view.update(markdownView);
+				view.updateDisplay();
 			}
 		}
 	}

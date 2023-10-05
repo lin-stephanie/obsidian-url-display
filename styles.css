@@ -22,16 +22,26 @@
 	/* border-radius: 50%; */
 }
 
+.url-display-link svg {
+	width: 20px;
+	height: 100%;
+	stroke-width: 1.5;
+}
+
 .url-display-text {
 	padding-left: 10px;
 }
 
-.url-display-optiion {
+.url-display-item:hover .url-display-link svg {
+	color: rgb(92, 92, 92);
+}
+
+.url-display-navigation {
 	display: none;
 	color: var(--nav-item-color);
 }
 
-.url-display-item:hover .url-display-optiion {
+.url-display-item:hover .url-display-navigation {
 	display: flex;
 	align-items: center;
 	height: 16.9px;
@@ -63,7 +73,8 @@
 }
 
 .skeleton-square {
-	flex: 1;
+	/* flex: 1; */
+	width: 20px;
 	height: 20px;
 	border-radius: 5px;
 	margin-right: 8px;

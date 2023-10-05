@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import { CacheData } from "./constants";
+import { CacheData } from "./types";
 
 export class IndexedDBCache {
     private store: LocalForage;

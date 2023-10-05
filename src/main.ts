@@ -87,7 +87,7 @@ export default class UrlDisplayPlugin extends Plugin {
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 			this.app.workspace.revealLeaf(leaf);
 		} else {
-			new Notice("Open in markdown 😉");
+			new Notice("Move focus into markdown 😉");
 		}
 	}
 

@@ -5,7 +5,7 @@ import Mustache from "mustache";
 
 import UrlDisplayPlugin from "./main";
 import { IndexedDBCache } from "./cache";
-import type { ResponseData, CacheData } from "./constants";
+import type { ResponseData, CacheData } from "./types";
 
 abstract class Parser {
 	public api: string;

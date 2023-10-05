@@ -11,6 +11,8 @@ export interface UrlParse {
     link: string;
     title?: string;
     icon?: string;
+	line?: number;
+	ch?:  number;
 }
 
 export interface ResponseData {
