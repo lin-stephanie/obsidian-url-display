@@ -39,7 +39,7 @@ export class markdownProcessor {
 			} else {
 				this.activeNotehaveUrl = true;
 				this.activeNoteUrlParse = await this.parseUrl(this.activeMarkdownView);
-				console.log(this.activeNoteUrlParse);
+				// console.log(this.activeNoteUrlParse);
 				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
 				// if currentMarkdownView is null, it means that the user is clicking ribbon icon
 				// WARN: cannot use this.activeMarkdownView(the reference has changed) but markdownView(the reference in the closure)

@@ -11,7 +11,7 @@ export default class UrlDisplayPlugin extends Plugin {
 	public processor: markdownProcessor;
 
 	public override async onload() {
-		console.clear();
+		// console.clear();
 		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
 		await this.loadSettings();

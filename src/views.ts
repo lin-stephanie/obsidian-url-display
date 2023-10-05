@@ -6,7 +6,8 @@ import { VIEW_TYPE } from "./constants";
 
 export class UrlDisplayView extends ItemView {
 	private plugin: UrlDisplayPlugin;
-	public processor: markdownProcessor;
+	private processor: markdownProcessor;
+	private eventListeners: Array<{ element: HTMLElement; handler: (event: MouseEvent) => void }> = [];
 
 	constructor(leaf: WorkspaceLeaf, plugin: UrlDisplayPlugin, processor: markdownProcessor) {
 		super(leaf);
@@ -63,83 +64,100 @@ export class UrlDisplayView extends ItemView {
 		}
 	}
 
+	private readonly isParsing = (container: Element): void => {
+		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
+		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
+
+		for (let index = 0; index < 3; index++) {
+			const navUrl = childrenEl.createEl("div", { cls: 'tree-item nav-file' });
+			const navUrlItem = navUrl.createEl('div', { cls: 'nav-file-title url-display-item' });
+			const item = navUrlItem.createDiv({ cls: 'skeleton' });
+			item.createDiv({ cls: 'skeleton-square' });
+			item.createDiv({ cls: 'skeleton-line' });
+		}
+
+		container.appendChild(rootEl);
+	}
+
 	public readonly updateList = (container: Element): void => {
+		this.removeEventListeners();
 
 		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
 		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
 
 		if (this.processor.activeNoteUrlParse) {
 			this.processor.activeNoteUrlParse.forEach((currentUrl) => {
-				// console.log("updateList");
-				const navUrl = childrenEl.createDiv({ cls: 'tree-item nav-file url-display' });
-				const navUrlItem = navUrl.createDiv({ cls: 'tree-item-self is-clickable nav-file-title url-display-item' });
+				const navUrl = childrenEl.createDiv({ cls: 'tree-item nav-file' });
+				const navUrlItem = navUrl.createDiv({ cls: 'nav-file-title url-display-item' });
 
-				navUrlItem.setAttribute('data-alias', String(currentUrl.alias));
-				navUrlItem.setAttribute('data-link', String(currentUrl.link));
+				navUrlItem.setAttribute('data-alias', currentUrl.alias);
+				navUrlItem.setAttribute('data-link', currentUrl.link);
 				navUrlItem.setAttribute('data-title', String(currentUrl.title));
 				navUrlItem.setAttribute('data-line', String(currentUrl.line));
 
-				const navUrlItemlink = navUrlItem.createEl("a", { cls: 'tree-item-inner nav-file-title-content url-display-link' });
-				navUrlItemlink.setAttribute("href", currentUrl.link);
-				navUrlItemlink.setAttr('draggable', 'false');
+				const handler = (event: MouseEvent) => this.handleMousedown(event);
+				navUrlItem.addEventListener('mousedown', handler);
+				this.eventListeners.push({ element: navUrlItem, handler });
 
 				if (this.plugin.settings.showFavicon) {
 					if (currentUrl.icon) {
-						const navUrlItemlinkImg = navUrlItemlink.createEl('img', { cls: 'url-display-img' });
-						navUrlItemlinkImg.setAttribute("src", currentUrl.icon);
-						navUrlItemlinkImg.setAttr('draggable', 'false');
+						const navUrlItemImg = navUrlItem.createEl('img');
+						navUrlItemImg.setAttribute("src", currentUrl.icon);
+						navUrlItemImg.setAttr('draggable', 'false');
 					} else {
-						// TS：Type 'null' is not assignable to type 'Node'.
-						navUrlItemlink.appendChild(getIcon("globe") as Node);
+						navUrlItem.appendChild(getIcon("globe") as Element);
 					}
 				}
 
-				navUrlItemlink.createSpan({
-					cls: 'url-display-text nav-file-title-content',
-					text: this.plugin.settings.useAlias && currentUrl.alias.trim() !== "" ? currentUrl.alias : (currentUrl.title ? currentUrl.title : "Untitled"),
+				navUrlItem.createSpan({
+					text: this.plugin.settings.useAlias && currentUrl.alias.trim() !== "" ? currentUrl.alias :
+						(currentUrl.title ? currentUrl.title : "Untitled"),
 				});
 
-
-				// click then scroll the view based on the URL line
-				const navUrlItemNavigation = navUrlItem.createDiv({ cls: 'url-display-navigation' });
-				navUrlItemNavigation.appendChild(getIcon("navigation") as Node);
-
-				navUrlItem.addEventListener('click', (event) => this.locateToUrl(event));
+				const navUrlItemNavigation = getIcon("navigation") as Element;
+				navUrlItem.appendChild(navUrlItemNavigation);
+				navUrlItemNavigation.classList.add('url-display-navigation');
 			})
 		}
 		container.appendChild(rootEl);
 	}
 
-	private readonly isParsing = (container: Element): void => {
-		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
-		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
+	private readonly handleMousedown = (event: MouseEvent): void => {
+		let currentElement = event.target as HTMLElement;
+		const delegatedElement = event.currentTarget as HTMLElement;
 
-		for (let index = 0; index < 3; index++) {
-			const navUrl = childrenEl.createEl("div", { cls: 'tree-item nav-file url-display' });
-			const navUrlItem = navUrl.createEl('div', { cls: 'tree-item-self is-clickable nav-file-title url-display-item' });
-			const item = navUrlItem.createDiv({ cls: 'tree-item-inner nav-file-title-content url-display-link skeleton' });
-			item.createDiv({ cls: 'url-display-content-img skeleton-square' });
-			item.createDiv({ cls: 'url-display-content-text skeleton-line' });
+		// scroll the view based on the URL line
+		if (event.button === 0) {
+			while (currentElement !== delegatedElement) {
+				if (currentElement.classList.contains("url-display-navigation")) {
+					window.open(delegatedElement.getAttribute('data-link') as string);
+					return;
+				}
+				currentElement = currentElement.parentElement as HTMLElement;
+			}
+			const line = Number(delegatedElement.getAttribute('data-line'));
+			this.processor.activeMarkdownView?.setEphemeralState({ line });
 		}
 
-		container.appendChild(rootEl);
+		// open link in browser
+		else if (event.button === 1) {
+			event.preventDefault();
+			window.open(delegatedElement.getAttribute('data-link') as string);
+		}
 	}
 
-	public readonly locateToUrl = (event: MouseEvent): void => {
-		const delegateElement = event.currentTarget as HTMLElement;;
-		const line = Number(delegateElement.getAttribute('data-line'));
-		// console.log("line", line);
-		this.processor.activeMarkdownView?.setEphemeralState({ line });
+	private readonly removeEventListeners = (): void => {
+		this.eventListeners.forEach(({ element, handler }) => {
+			element.removeEventListener('mousedown', handler);
+		});
+		this.eventListeners = [];
 	}
 
 	public override async onClose() {
-		// Nothing to clean up.
+		this.removeEventListeners();
 	}
 }
 
-
-/* const navUrlItemSearch = navUrlItem.createDiv({ cls: 'url-display-optiion' });
-navUrlItemSearch.appendChild(getIcon("search") as Node);
-
-const navUrlItemCopy = navUrlItem.createDiv({ cls: 'url-display-optiion' });
-navUrlItemCopy.appendChild(getIcon("copy") as Node); */
+/* const navUrlItemSearch = getIcon("search") as Element;
+navUrlItem.appendChild(navUrlItemSearch);
+navUrlItemSearch.classList.add('url-display-search'); */

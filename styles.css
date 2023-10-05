@@ -5,49 +5,43 @@
 	margin-bottom: 0;
 }
 
-.url-display-link {
-	display: flex;
-	align-items: center;
-}
-
-.url-display-link:link {
-	width: 100%;
-	color: inherit;
-	text-decoration: none;
-}
-
-.url-display-img {
+.url-display-item img {
 	width: 20px;
 	height: 100%;
 	/* border-radius: 50%; */
 }
 
-.url-display-link svg {
-	width: 20px;
-	height: 100%;
-	stroke-width: 1.5;
-}
-
-.url-display-text {
+.url-display-item span {
+	display: block;
 	padding-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.url-display-item:hover .url-display-link svg {
+.url-display-item svg {
+	flex-shrink: 0;
+	stroke-width: 1.5px;
+}
+
+.url-display-item:hover svg {
 	color: rgb(92, 92, 92);
 }
 
 .url-display-navigation {
-	display: none;
-	color: var(--nav-item-color);
+	visibility: hidden;
 }
 
 .url-display-item:hover .url-display-navigation {
-	display: flex;
-	align-items: center;
-	height: 16.9px;
-	padding: 0 3px;
+	visibility: visible;
+	/* width: 16px;
+	height: 16px; */
+	margin-left: auto;
+	margin-right: 3px;
+	color: var(--nav-item-color);
 	cursor: pointer;
 }
+
 
 .lucide-navigation polygon, 
 .lucide-search circle, 
@@ -64,6 +58,7 @@
 .lucide-copy:hover path{
     stroke: var(--interactive-accent);
 }
+
 
 .skeleton {
 	display: flex;
