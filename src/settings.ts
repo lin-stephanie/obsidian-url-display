@@ -59,8 +59,19 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
+			.setName('Show indicator icon')
+			.setDesc('If enabled, and show favicon is disabled, icons will be shown to identify URLs.')
+			.addToggle(value => value
+				.setValue(this.plugin.settings.showIndicatorIcon)
+				.onChange((value) => {
+					this.plugin.settings.showIndicatorIcon = value;
+					this.plugin.saveSettings();
+				})
+			);
+
+		new Setting(containerEl)
 			.setName('Cache mode')
-			.setDesc('Choose cache mode for saving favicons. This will only take effect when show favicon is set to true.')
+			.setDesc('Choose cache mode for saving favicons of URLs. This will only take effect when show favicon is enable.')
 			.addDropdown((value) => {
 				value
 					.addOptions({ diskCache: 'disk cache', memoryCache: 'memory cache' })

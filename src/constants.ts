@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
 	ignoreFileProperty: true,
 	useAlias: true,
 	showFavicon: false,
+	showIndicatorIcon: true,
 	cacheMode: 'diskCache',
 	noticeMode: 'none',
 }

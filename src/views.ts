@@ -110,8 +110,8 @@ export class UrlDisplayView extends ItemView {
 					} else {
 						navUrlItem.appendChild(getIcon("globe") as Element);
 					}
-				} else {
-					// navUrlItem.appendChild(getIcon("globe") as Element);
+				} else if (this.plugin.settings.showIndicatorIcon) {
+					navUrlItem.appendChild(getIcon("globe") as Element);
 				}
 
 				navUrlItem.createSpan({

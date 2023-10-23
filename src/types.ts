@@ -3,6 +3,7 @@ export interface UrlDisplaySettings {
 	ignoreFileProperty: boolean;
 	useAlias: boolean;
 	showFavicon: boolean;
+	showIndicatorIcon: boolean;
 	cacheMode: string;
 	noticeMode: string;
 }

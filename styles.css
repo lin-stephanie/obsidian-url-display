@@ -21,11 +21,15 @@
 
 .url-display-item svg {
 	flex-shrink: 0;
-	stroke-width: 1.5px;
+	stroke-width: 1.6px;
+}
+
+.url-display-item .lucide-globe {
+	stroke-width: 1.3px;
 }
 
 .url-display-item:hover svg {
-	color: rgb(92, 92, 92);
+	color: var(--nav-item-color);
 }
 
 .url-display-navigation {
@@ -43,19 +47,11 @@
 }
 
 
-.lucide-navigation polygon, 
-.lucide-search circle, 
-.lucide-search line,
-.lucide-copy rect, 
-.lucide-copy path{
+.lucide-navigation polygon {
     transition: stroke 0.3s ease;
 }
 
-.lucide-navigation:hover polygon,
-.lucide-search:hover circle, 
-.lucide-search:hover line,
-.lucide-copy:hover rect, 
-.lucide-copy:hover path{
+.lucide-navigation:hover polygon {
     stroke: var(--interactive-accent);
 }
 
