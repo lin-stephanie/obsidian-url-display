@@ -1,4 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
+
 import UrlDisplayPlugin from "./main";
 
 export class UrlDisplaySettingTab extends PluginSettingTab {
@@ -56,8 +57,6 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				})
 			);
-
-
 
 		new Setting(containerEl)
 			.setName('Cache mode')

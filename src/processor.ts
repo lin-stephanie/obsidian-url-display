@@ -6,8 +6,7 @@ import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
 import { deduplicateObjArrByUniId } from "./utils"
 import type { UrlParse } from "./types"
-import { VIEW_TYPE, EXTERNAL_LINK, URLREGEX, SPECIAL, EXCLUDE, SUPPORTED_VIEW_TYPE } from "./constants"
-
+import { VIEW_TYPE, URLREGEX, SPECIAL, EXCLUDE, SUPPORTED_VIEW_TYPE } from "./constants"
 
 export class markdownProcessor {
 	public plugin: UrlDisplayPlugin;
@@ -20,7 +19,6 @@ export class markdownProcessor {
 	public activeViewType: string;
 	public activeNotehaveUrl: boolean;
 	public activeNoteUrlParse: UrlParse[] | null | undefined;
-	
 
 	constructor(plugin: UrlDisplayPlugin) {
 		this.plugin = plugin;
@@ -32,8 +30,8 @@ export class markdownProcessor {
 		this.initState();
 		this.activeView = view;
 		this.activeViewType = view.getViewType();
-		
-		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeView.getViewType()]) {
+
+		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeViewType]) {
 			const activeNoteUrl = await this.extractUrl(this.activeView.file);
 			this.isExtracting = false;
 			if (!activeNoteUrl) {
@@ -41,7 +39,6 @@ export class markdownProcessor {
 			} else {
 				this.activeNotehaveUrl = true;
 				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
-				// console.log(this.activeNoteUrlParse);
 				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
 				// if currentMarkdownView is null, it means that the user is clicking ribbon icon
 				// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
@@ -72,11 +69,11 @@ export class markdownProcessor {
 
 		if (activeFile) {
 			const activeFilContent = await this.plugin.app.vault.cachedRead(activeFile);
-			return activeFilContent.match(EXTERNAL_LINK);
+			return activeFilContent.match(URLREGEX);
 		}
 	}
 
-	private readonly parseUrl = async (activeView: FileView): Promise<UrlParse[] | undefined>  => {
+	private readonly parseUrl = async (activeView: FileView): Promise<UrlParse[] | undefined> => {
 		this.isParsing = true;
 		this.updateView();
 
@@ -115,32 +112,46 @@ export class markdownProcessor {
 		let match;
 		let UrlObject: UrlParse[] = [];
 		let yamlStartIndex = -1;
-        let yamlEndIndex = -1;
+		let yamlEndIndex = -1;
 
 		// check if the URL is within the YAML section and should be ignored
 		if (this.plugin.settings.ignoreFileProperty) {
-            const yamlStartMatch = content.match(/---/);
-            const yamlEndMatch = content.match(/---/g);
-            if (yamlStartMatch && yamlStartMatch.index) {
+			const yamlStartMatch = content.match(/---/);
+			const yamlEndMatch = content.match(/---/g);
+			if (yamlStartMatch && yamlStartMatch.index) {
 				yamlStartIndex = yamlStartMatch.index;
 			}
-            if (yamlEndMatch && yamlEndMatch.length > 1) {
+			if (yamlEndMatch && yamlEndMatch.length > 1) {
 				yamlEndIndex = content.lastIndexOf('---');
 			}
-        }
+		}
 
 		while (match = URLREGEX.exec(content)) {
 			const index = match.index;
+			const charBefore = content[index - 1];
+			const charAfter = content[index + match[0].length];
+			const precedingText = content.substring(0, index);
+			const backtickCount = (precedingText.match(/```/g) || []).length;
 
 			// check if the URL is within the YAML section and should be ignored
-            if (this.plugin.settings.ignoreFileProperty && index > yamlStartIndex && index < yamlEndIndex) {
-                continue;
-            }
+			if (this.plugin.settings.ignoreFileProperty && index > yamlStartIndex && index < yamlEndIndex) {
+				continue;
+			}
 
-			// get capturing group from match
-			const alias = match[1] || '';
+			// Skip URLs within inline code
+			if (charBefore === '`' && charAfter === '`') {
+				continue;
+			}
+
+			// Skip URLs within code blocks
+			if (backtickCount % 2 === 1) {
+				continue;
+			}
+
+			// get capturing group from match & remove markdown syntax
+			const alias = match[1]?.replace(/(\*\*|__|~~|\*|==|`)/g, '').trim() || '';
 			const link = match[2] || match[3];
-			
+
 			// check if the URL has an excluded extension
 			if (EXCLUDE.some(ext => link.endsWith(ext))) {
 				continue;
@@ -148,7 +159,7 @@ export class markdownProcessor {
 
 			// calculate the line where the URL is located
 			const lines = content.substring(0, index).split('\n');
-			const line = lines.length-1;
+			const line = lines.length - 1;
 			// const ch = lines[line - 1].length;
 
 			UrlObject.push({ alias, link, line });

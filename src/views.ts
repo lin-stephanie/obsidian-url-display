@@ -1,8 +1,8 @@
-import { WorkspaceLeaf, ItemView, Menu, getIcon, MarkdownView, TFile } from "obsidian";
+import { WorkspaceLeaf, ItemView, Menu, getIcon } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
 import { markdownProcessor } from "./processor"
-import { VIEW_TYPE } from "./constants";
+import { VIEW_TYPE, SUPPORTED_VIEW_TYPE } from "./constants";
 
 export class UrlDisplayView extends ItemView {
 	private plugin: UrlDisplayPlugin;
@@ -45,9 +45,14 @@ export class UrlDisplayView extends ItemView {
 			})
 	}
 
-	public readonly updateDisplay = () => {
+	public readonly updateDisplay = (): void => {
 		const container = this.containerEl.children[1];
 		container.empty();
+
+		if (!SUPPORTED_VIEW_TYPE[this.processor.activeViewType]) {
+			container.createDiv({ cls: 'pane-empty',  text: "The view type is currently not supported."});
+			return;
+		}
 
 		if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
 			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});

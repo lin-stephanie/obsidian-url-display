@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin, FileView } from "obsidian";
+import { MarkdownView, Plugin } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
