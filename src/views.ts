@@ -28,8 +28,8 @@ export class UrlDisplayView extends ItemView {
 	}
 
 	public override async onOpen() {
-		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		this.processor.process(markdownView);
+		const fileView = this.app.workspace.getActiveFileView();
+		this.processor.process(fileView);
 	}
 
 	public readonly onHeaderMenu = (menu: Menu): void => {
@@ -39,10 +39,8 @@ export class UrlDisplayView extends ItemView {
 					.setTitle('Refresh list')
 					.setIcon('refresh-cw')
 					.onClick(async () => {
-						const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-						if (currentMarkdownView) {
-							this.processor.process(currentMarkdownView);
-						}
+						const fileView = this.app.workspace.getActiveFileView();
+						this.processor.process(fileView);
 					});
 			})
 	}
@@ -52,7 +50,7 @@ export class UrlDisplayView extends ItemView {
 		container.empty();
 
 		if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
-			container.createEl("p", { text: "No valid URL found 😄" });
+			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});
 		}
 
 		if (this.processor.isExtracting || this.processor.isParsing) {
@@ -137,8 +135,23 @@ export class UrlDisplayView extends ItemView {
 				}
 				currentElement = currentElement.parentElement as HTMLElement;
 			}
-			const line = Number(delegatedElement.getAttribute('data-line'));
-			this.processor.activeMarkdownView?.setEphemeralState({ line });
+			if (this.processor.activeViewType === "markdown") {
+				const line = Number(delegatedElement.getAttribute('data-line'));
+				this.processor.activeView.setEphemeralState({ line });
+			} 
+			else if (this.processor.activeViewType === "kanban") {
+				const linkElement = document.querySelector(`a[href="${delegatedElement.getAttribute('data-link')}"].external-link`);
+				if (linkElement) { 
+					linkElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: "center" });
+					linkElement.classList.add('is-flashing');
+					setTimeout(() => {
+						linkElement.classList.remove('is-flashing');
+					}, 1000);  
+				}				
+			}
+			// else if (this.processor.activeViewType === "canvas") {
+			// 	return;
+			// }
 		}
 
 		// open link in browser

@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, TFile, debounce } from "obsidian";
+import { MarkdownView, FileView, Notice, TFile, debounce } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
 import { UrlDisplayView } from "./views"
@@ -6,7 +6,7 @@ import { IndexedDBCache } from "./cache";
 import { MicroLinkParser } from "./parser";
 import { deduplicateObjArrByUniId } from "./utils"
 import type { UrlParse } from "./types"
-import { VIEW_TYPE, EXTERNAL_LINK, URLREGEX, SPECIAL, EXCLUDE } from "./constants"
+import { VIEW_TYPE, EXTERNAL_LINK, URLREGEX, SPECIAL, EXCLUDE, SUPPORTED_VIEW_TYPE } from "./constants"
 
 
 export class markdownProcessor {
@@ -16,7 +16,8 @@ export class markdownProcessor {
 
 	public isExtracting: boolean;
 	public isParsing: boolean;
-	public activeMarkdownView: MarkdownView | null;
+	public activeView: FileView;
+	public activeViewType: string;
 	public activeNotehaveUrl: boolean;
 	public activeNoteUrlParse: UrlParse[] | null | undefined;
 	
@@ -27,25 +28,26 @@ export class markdownProcessor {
 		this.parser = new MicroLinkParser(this.plugin, this.cache);
 	}
 
-	public readonly process = debounce(async (markdownView: MarkdownView | null) => {
+	public readonly process = debounce(async (view: FileView) => {
 		this.initState();
-		this.activeMarkdownView = markdownView;
-
-		if (this.activeMarkdownView) {
-			const activeNoteUrl = await this.extractUrl(this.activeMarkdownView.file);
+		this.activeView = view;
+		this.activeViewType = view.getViewType();
+		
+		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeView.getViewType()]) {
+			const activeNoteUrl = await this.extractUrl(this.activeView.file);
 			this.isExtracting = false;
 			if (!activeNoteUrl) {
 				this.updateView();
 			} else {
 				this.activeNotehaveUrl = true;
-				this.activeNoteUrlParse = await this.parseUrl(this.activeMarkdownView);
+				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
 				// console.log(this.activeNoteUrlParse);
 				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
 				// if currentMarkdownView is null, it means that the user is clicking ribbon icon
-				// WARN: cannot use this.activeMarkdownView(the reference has changed) but markdownView(the reference in the closure)
+				// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
 				const currentMarkdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (currentMarkdownView) {
-					if (currentMarkdownView.file?.path === markdownView?.file?.path) {
+					if (currentMarkdownView.file?.path === view?.file?.path) {
 						this.updateView();
 					}
 				} else {
@@ -74,13 +76,13 @@ export class markdownProcessor {
 		}
 	}
 
-	private readonly parseUrl = async (markdownView: MarkdownView): Promise<UrlParse[] | undefined>  => {
+	private readonly parseUrl = async (activeView: FileView): Promise<UrlParse[] | undefined>  => {
 		this.isParsing = true;
 		this.updateView();
 
-		// the same: const activeFilContent = await this.plugin.app.vault.cachedRead(markdownView.file as TFile);
-		const activeFilContent = markdownView.editor.getValue();
-		const cleanedUrls = this.locateUrl(activeFilContent);
+		const activeContent = await this.plugin.app.vault.cachedRead(activeView.file as TFile);
+		// const activeContent = markdownView.editor.getValue();
+		const cleanedUrls = this.locateUrl(activeContent);
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
 			if (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both") {

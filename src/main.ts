@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, Plugin } from "obsidian";
+import { MarkdownView, Notice, Plugin, FileView } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -53,11 +53,12 @@ export default class UrlDisplayPlugin extends Plugin {
 			id: 'refresh-list',
 			name: 'Refresh list',
 			checkCallback: (checking: boolean) => {
-				const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				// const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
-				if (currentMarkdownView && urlDisplayView) {
+				if (fileView && urlDisplayView) {
 					if (!checking) {
-						this.processor.process(currentMarkdownView);
+						this.processor.process(fileView);
 					}
 					return true;
 				}
@@ -67,8 +68,12 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private registerListener() {
 		this.registerEvent(this.app.workspace.on('file-open', (file) => {
-			const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			this.processor.process(currentMarkdownView);
+			/* const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+			this.processor.process(currentMarkdownView); */
+			const fileView = this.app.workspace.getActiveFileView(); 
+			if (fileView) {
+				this.processor.process(fileView);
+			}
 		}));
 	}
 	
@@ -82,12 +87,10 @@ export default class UrlDisplayPlugin extends Plugin {
 	}
 
 	private async activateView () {
-		if (this.app.workspace.getActiveViewOfType(MarkdownView)) {
+		if (this.app.workspace.getActiveFileView()) {
 			let leaf = this.app.workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 			this.app.workspace.revealLeaf(leaf);
-		} else {
-			new Notice("Move focus into markdown 😉");
 		}
 	}
 
