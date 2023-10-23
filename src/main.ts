@@ -88,7 +88,7 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private async activateView () {
 		if (this.app.workspace.getActiveFileView()) {
-			let leaf = this.app.workspace.getRightLeaf(false);
+			const leaf = this.app.workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 			this.app.workspace.revealLeaf(leaf);
 		}

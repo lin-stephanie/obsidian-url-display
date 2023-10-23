@@ -49,7 +49,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Show favicon')
-			.setDesc('If enabled, the pane will show the favicons of URLs.')
+			.setDesc('If enabled, URL favicons will be shown in the pane.')
 			.addToggle(value => value
 				.setValue(this.plugin.settings.showFavicon)
 				.onChange((value) => {
@@ -60,7 +60,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Show indicator icon')
-			.setDesc('If enabled, and show favicon is disabled, icons will be shown to identify URLs.')
+			.setDesc('If enabled, icons will be shown in the pane to identify URLs. This will only take effect when show favicon is disabled.')
 			.addToggle(value => value
 				.setValue(this.plugin.settings.showIndicatorIcon)
 				.onChange((value) => {
@@ -71,7 +71,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Cache mode')
-			.setDesc('Choose cache mode for saving favicons of URLs. This will only take effect when show favicon is enable.')
+			.setDesc('Choose cache mode for saving URL favicons. This will only take effect when show favicon is enable.')
 			.addDropdown((value) => {
 				value
 					.addOptions({ diskCache: 'disk cache', memoryCache: 'memory cache' })
@@ -84,7 +84,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Notice mode')
-			.setDesc('You can customize the type of notifications when URL parsing finishes.')
+			.setDesc('Customize the type of notifications when URL parsing finishes.')
 			.addDropdown((value) => {
 				value
 					.addOptions({ none: 'none', successful: 'successful', failed: 'failed', both: 'both' })

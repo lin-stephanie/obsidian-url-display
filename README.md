@@ -1,11 +1,11 @@
 # Obsidian URL Display
 
-This [Obsidian](https://obsidian.md/) plugin can extract external URLs from the active note and display them in the pane.
+The plugin can extract and display external URLs from the active note in [Obsidian](https://obsidian.md/).
 
 ![demo](https://github.com/lin-stephanie/obsidian-url-display/blob/main/docs/demo.png)
 ## Features
 
-- Extract external URLs in the active note and show them in the pane.
+- Extract external URLs in the active note (including [kanban](https://github.com/mgmeyers/obsidian-kanban)) and show them in the pane.
 - Customize the content displayed in the pane through [plugin setting](#settings). 
 - Left-click to navigate to the location of the URL in the active note.
 - Middle-click (or click the navigation icon for special case) to open the URL in a new browser tab.
@@ -18,31 +18,33 @@ This [Obsidian](https://obsidian.md/) plugin can extract external URLs from the 
 
 ### Enable
 
-- Move focus into a note, then:
 - Select on the plugin icon in the ribbon, or:
 - Open the command palette and select the command `URL Display: Open or close pane`.
 
 ### Update URL list
 
-- Keep focus in a note, then:
 - Right select on the plugin icon in the sidebar and select `Refresh list`, or:
 - Open the command palette and select the command `URL Display: Refresh list`.
 
-### Tips
+### Pay attentions
 
 - Normally, when you switch between different notes, the URL List will be automatically updated.
-- After you modify URL in the active note, you need to manually refresh the URL list as mentioned above.
-- Note that the plugin also extract URLs in code, code block, callout and document property.
-- In Live Preview mode, the location reminder for the URL in callout is not obvious enough.
+- After you modify URL, you need to manually update the URL list as mentioned above, or trigger updates by switching notes.
+- If you want to display the URL list as soon as possible, it is recommended that enable `Use alias` and disable `Show favicon`.
+- If enable `Deduplicate URLs`, you can only navigate to the first occurrence of the URL.
+- URLs in inline codes and code blocks are not extracted and displayed.
+- For navigating to the location of the URL in callout or table, it dosen't work in Live Preview, and it is not obvious enough in Reading View, but it is okay in Source mode.
 ## Settings
 
-|          Item                                 |          Description                                                                                                                                                                                                                                                                        |       Value                                      |          Default               |
-|:----------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------|:-------------------------------|
-|          Deduplicate URLs                     |         If enabled, 2 same URLs in the note will only display once.                                                                                                                                                                                                                         |       boolean                                    | false                          |
-|          Use alias                            |          By default, the website title from URL metadata is used as the display text. If enabled, the text in brackets ([]) will be used.                                                                                                                                                   |       boolean                                    |          true                  |
-|         Show favicon                          |         If disabled, the pane will not show the favicon, but only the text.                                                                                                                                                                                                                 |       boolean                                    |          false                 |
-|          Cache mode                           |          Choose cache mode for saving favicons. This will only take effect when show favicon is set to  `true`. See more [details](#about-cache-mode).                                                                                                                                      |       disk cache, memory cache                   |          disk cache            |
-|        Notice mode                            |        You can customize the type of notifications when URL parsing finishes.                                                                                                                                                                                                               |       none, successful, failed, both&nbsp;       |        none                    |  
+|           Item                                  |           Description                                                                                                                                                                                                                                                                         |        Value                                       |           Default                |
+|:------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------|:---------------------------------|
+|           Deduplicate URLs                      |          If enabled, 2 same URLs in the note will only display once.                                                                                                                                                                                                                          |        boolean                                     |  false                           |
+| Ignore file property                            | If enabled, URLs in file properties will not be extracted and displayed.                                                                                                                                                                                                                      | boolean                                            | true                             |
+|           Use alias                             | If enabled, the text in brackets ([]) will be used to display, otherwise the website title from URL metadata will be used.                                                                                                                                                                    |        boolean                                     |           true                   |
+|          Show favicon                           |          If enabled, URL favicons will be shown in the pane.                                                                                                                                                                                                                                  |        boolean                                     |           false                  |
+| Show indicator icon                             | If enabled, icons will be shown in the pane to identify URLs. This will only take effect when show favicon is disabled.                                                                                                                                                                       | boolean                                            | true                             |
+|           Cache mode                            |           Choose cache mode for saving URL favicons.&nbsp;This will only take effect when show favicon is set to  `true`. See more [details](#about-cache-mode).<br>                                                                                                                          |        disk cache, memory cache                    |           disk cache             |
+|         Notice mode                             | Customize the type of notifications when URL parsing finishes.                                                                                                                                                                                                                                |        none, successful, failed, both&nbsp;        |         none                     |  
 
 ## Details
 
@@ -56,20 +58,17 @@ https://example.org
 
 ### REST API used
 
-If you enable `Show favicon` or disable `Use alias` in the plugin settings, the plugin will use the free [MicroLink API](https://microlink.io) (`https://api.microlink.io?url=`) to request URL metadata, but there is a limitation: 50 requests/day. Don't worry, the plugin will cache the metadata to avoid repeated requests of same URLs.
-
-Note that it takes a certain amount of time to request URL metadata (depending on the number of URLs in the note). **If you want to display the URL list as soon as possible, it is recommended that disable `Show favicon` and enable `Use alias`.**
+If you enable `Show favicon` or disable `Use alias` in the plugin settings, the plugin will use the free [MicroLink API](https://microlink.io) (`https://api.microlink.io?url=`) to request URL metadata, but there is a limitation: 50 requests/day. Don't worry, the plugin will cache the metadata to avoid repeated requests of same URLs. Note that it takes a certain amount of time to request URL metadata (depending on the number of URLs in the note). 
 
 ### About cache mode
 
-If you want the favicon to appear faste, you may choose `memory cache`, but please note that it may affect the current performance. If you don't care about speed and there are many URLs, it is recommended to choose `disk cache`.
+If you want to show favicons faster, you can set cache mode to `memory cache`, but please note that it may affect the current performance. If you don't care about speed and there are many URLs, it is recommended to choose `disk cache`.
 
 ## Todos
 
-- Optionally exclude URLs in code, code blocks, and document properties.
-- Add global search and copy features.
-- Support extracting URLs from other plugin views (such as Kanban).
-- Add external URLs to note footer as footlinks.
+- Support canvas.
+- Add global search and copy.
+- Add URLs to note footer as footlinks.
 - URL list can be downloaded as netscape bookmark file format.
 
 ## Thanks

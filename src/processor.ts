@@ -111,21 +111,15 @@ export class markdownProcessor {
 	private readonly locateUrl = (content: string): UrlParse[] => {
 		let match;
 		let UrlObject: UrlParse[] = [];
-		let yamlStartIndex = -1;
 		let yamlEndIndex = -1;
 
 		// check if the URL is within the YAML section and should be ignored
 		if (this.plugin.settings.ignoreFileProperty) {
-			const yamlStartMatch = content.match(/---/);
-			const yamlEndMatch = content.match(/---/g);
-			if (yamlStartMatch && yamlStartMatch.index) {
-				yamlStartIndex = yamlStartMatch.index;
-			}
-			if (yamlEndMatch && yamlEndMatch.length > 1) {
-				yamlEndIndex = content.lastIndexOf('---');
-			}
+			yamlEndIndex = content.indexOf('---', 3); 
+			console.log(yamlEndIndex)
 		}
 
+		/* eslint no-cond-assign: "off" */
 		while (match = URLREGEX.exec(content)) {
 			const index = match.index;
 			const charBefore = content[index - 1];
@@ -134,7 +128,7 @@ export class markdownProcessor {
 			const backtickCount = (precedingText.match(/```/g) || []).length;
 
 			// check if the URL is within the YAML section and should be ignored
-			if (this.plugin.settings.ignoreFileProperty && index > yamlStartIndex && index < yamlEndIndex) {
+			if (this.plugin.settings.ignoreFileProperty && index < yamlEndIndex) {
 				continue;
 			}
 
