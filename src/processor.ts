@@ -112,17 +112,39 @@ export class markdownProcessor {
 	private readonly locateUrl = (content: string): UrlParse[] => {
 		let match;
 		let UrlObject: UrlParse[] = [];
+		let yamlStartIndex = -1;
+        let yamlEndIndex = -1;
+
+		// check if the URL is within the YAML section and should be ignored
+		if (this.plugin.settings.ignoreFileProperty) {
+            const yamlStartMatch = content.match(/---/);
+            const yamlEndMatch = content.match(/---/g);
+            if (yamlStartMatch && yamlStartMatch.index) {
+				yamlStartIndex = yamlStartMatch.index;
+			}
+            if (yamlEndMatch && yamlEndMatch.length > 1) {
+				yamlEndIndex = content.lastIndexOf('---');
+			}
+        }
 
 		while (match = URLREGEX.exec(content)) {
-			let alias = match[1] || '';
-			let link = match[2] || match[3];
+			const index = match.index;
 
+			// check if the URL is within the YAML section and should be ignored
+            if (this.plugin.settings.ignoreFileProperty && index > yamlStartIndex && index < yamlEndIndex) {
+                continue;
+            }
+
+			// get capturing group from match
+			const alias = match[1] || '';
+			const link = match[2] || match[3];
+			
 			// check if the URL has an excluded extension
 			if (EXCLUDE.some(ext => link.endsWith(ext))) {
 				continue;
 			}
 
-			const index = match.index;
+			// calculate the line where the URL is located
 			const lines = content.substring(0, index).split('\n');
 			const line = lines.length-1;
 			// const ch = lines[line - 1].length;

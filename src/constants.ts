@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 import type { UrlDisplaySettings } from "./types"
 
 export const VIEW_TYPE = "url-display";
@@ -9,6 +8,7 @@ export const SPECIAL = /\?target=([^&\s]+)/;
 
 export const DEFAULT_SETTINGS: UrlDisplaySettings = {
     deduplicateUrls: false,
+	ignoreFileProperty: true,
     useAlias: true,
     showFavicon: false,
     cacheMode: 'diskCache',

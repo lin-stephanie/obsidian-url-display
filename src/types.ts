@@ -1,5 +1,6 @@
 export interface UrlDisplaySettings {
     deduplicateUrls: boolean;
+	ignoreFileProperty: boolean; 
     useAlias: boolean;
     showFavicon: boolean;
     cacheMode: string;
