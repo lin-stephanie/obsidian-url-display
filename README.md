@@ -1,8 +1,3 @@
----
-title: README-1.2.0
-datetimeCreate: 2023-10-06 16:07:48
-datetimeUpdate: 2023-10-24 11:22:39
----
 # Obsidian URL Display
 
 The plugin can extract and display external URLs from the active note in [Obsidian](https://obsidian.md/).
