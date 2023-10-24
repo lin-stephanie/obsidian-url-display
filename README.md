@@ -1,3 +1,8 @@
+---
+title: README-1.2.0
+datetimeCreate: 2023-10-06 16:07:48
+datetimeUpdate: 2023-10-24 11:22:39
+---
 # Obsidian URL Display
 
 The plugin can extract and display external URLs from the active note in [Obsidian](https://obsidian.md/).
@@ -11,12 +16,12 @@ The plugin can extract and display external URLs from the active note in [Obsidi
 - Middle-click (or click the navigation icon for special case) to open the URL in a new browser tab.
 ## Usage
 
-### Install
+### Install plugin
 
 - Directly install from Obsidian Market, or:
 - Download the latest release. Extract and put 3 files (main.js,  styles.css, manifest.json) to folder {{obsidian_vault}}/.obsidian/plugins/obsidian-url-display.
 
-### Enable
+### Open URL list
 
 - Select on the plugin icon in the ribbon, or:
 - Open the command palette and select the command `URL Display: Open or close pane`.
@@ -28,8 +33,8 @@ The plugin can extract and display external URLs from the active note in [Obsidi
 
 ### Pay attentions
 
-- Normally, when you switch between different notes, the URL List will be automatically updated.
-- After you modify URL, you need to manually update the URL list as mentioned above, or trigger updates by switching notes.
+- Normally, when you switch between different notes, the URL List will be automatically refreshed.
+- After you modify URL, you need to manually refresh the URL list as mentioned above, or trigger refresh by switching notes.
 - If you want to display the URL list as soon as possible, it is recommended that enable `Use alias` and disable `Show favicon`.
 - If enable `Deduplicate URLs`, you can only navigate to the first occurrence of the URL.
 - URLs in inline codes and code blocks are not extracted and displayed.
@@ -56,7 +61,7 @@ https://example.org
 [](https://example.org)
 ```
 
-### REST API used
+### About URL metadata
 
 If you enable `Show favicon` or disable `Use alias` in the plugin settings, the plugin will use the free [MicroLink API](https://microlink.io) (`https://api.microlink.io?url=`) to request URL metadata, but there is a limitation: 50 requests/day. Don't worry, the plugin will cache the metadata to avoid repeated requests of same URLs. Note that it takes a certain amount of time to request URL metadata (depending on the number of URLs in the note). 
 
@@ -66,6 +71,7 @@ If you want to show favicons faster, you can set cache mode to `memory cache`, b
 
 ## Todos
 
+- Improve URL metadata retrieval.
 - Support canvas.
 - Add global search and copy.
 - Add URLs to note footer as footlinks.

@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -39,8 +39,8 @@ export default class UrlDisplayPlugin extends Plugin {
 			id: 'open-or-close-pane',
 			name: 'Open or close pane',
 			checkCallback: (checking: boolean) => {
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
+				const fileView = this.app.workspace.getActiveFileView(); 
+				if (fileView) {
 					if (!checking) {
 						this.openOrClosePane();
 					}
@@ -53,7 +53,6 @@ export default class UrlDisplayPlugin extends Plugin {
 			id: 'refresh-list',
 			name: 'Refresh list',
 			checkCallback: (checking: boolean) => {
-				// const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
 				if (fileView && urlDisplayView) {
@@ -71,13 +70,10 @@ export default class UrlDisplayPlugin extends Plugin {
 			/* const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			this.processor.process(currentMarkdownView); */
 			const fileView = this.app.workspace.getActiveFileView(); 
-			if (fileView) {
-				this.processor.process(fileView);
-			}
+			this.processor.process(fileView);
 		}));
 	}
 	
-
 	private openOrClosePane() {
 		if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length) {
 			this.app.workspace.detachLeavesOfType(VIEW_TYPE);

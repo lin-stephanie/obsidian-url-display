@@ -51,19 +51,18 @@ export class UrlDisplayView extends ItemView {
 
 		if (!SUPPORTED_VIEW_TYPE[this.processor.activeViewType]) {
 			container.createDiv({ cls: 'pane-empty',  text: "The view type is currently not supported."});
-			return;
 		}
-
-		if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
+		else if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
 			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});
 		}
-
-		if (this.processor.isExtracting || this.processor.isParsing) {
+		else if (this.processor.isExtracting || this.processor.isParsing) {
 			this.isParsing(container);
 		}
-
-		if (!this.processor.isParsing && this.processor.activeNoteUrlParse) {
+		else if (!this.processor.isParsing && this.processor.activeNoteUrlParse?.length !== 0) {
 			this.updateList(container);
+		}
+		else {
+			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});
 		}
 	}
 
@@ -177,7 +176,3 @@ export class UrlDisplayView extends ItemView {
 		this.removeEventListeners();
 	}
 }
-
-/* const navUrlItemSearch = getIcon("search") as Element;
-navUrlItem.appendChild(navUrlItemSearch);
-navUrlItemSearch.classList.add('url-display-search'); */

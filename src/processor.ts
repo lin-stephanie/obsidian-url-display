@@ -29,7 +29,7 @@ export class markdownProcessor {
 	public readonly process = debounce(async (view: FileView) => {
 		this.initState();
 		this.activeView = view;
-		this.activeViewType = view.getViewType();
+		this.activeViewType = view?.getViewType();
 
 		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeViewType]) {
 			const activeNoteUrl = await this.extractUrl(this.activeView.file);
@@ -116,7 +116,6 @@ export class markdownProcessor {
 		// check if the URL is within the YAML section and should be ignored
 		if (this.plugin.settings.ignoreFileProperty) {
 			yamlEndIndex = content.indexOf('---', 3); 
-			console.log(yamlEndIndex)
 		}
 
 		/* eslint no-cond-assign: "off" */
