@@ -68,6 +68,19 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 					this.plugin.saveSettings();
 				})
 			);
+		
+		new Setting(containerEl)
+		.setName('Copy format')
+		.setDesc('Choose the format of the copied URL.')
+		.addDropdown((value) => {
+			value
+				.addOptions({ justLink: 'link', inlineLink: '[alias/title](link)' })
+				.setValue(this.plugin.settings.copyFormat)
+				.onChange((value) => {
+					this.plugin.settings.copyFormat = value;
+					this.plugin.saveSettings();
+				});
+		});
 
 		new Setting(containerEl)
 			.setName('Cache mode')

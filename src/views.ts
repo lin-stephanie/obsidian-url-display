@@ -1,4 +1,4 @@
-import { WorkspaceLeaf, ItemView, Menu, getIcon } from "obsidian";
+import { WorkspaceLeaf, ItemView, Menu, getIcon, Notice } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
 import { markdownProcessor } from "./processor"
@@ -94,12 +94,18 @@ export class UrlDisplayView extends ItemView {
 
 				navUrlItem.setAttribute('data-alias', currentUrl.alias);
 				navUrlItem.setAttribute('data-link', currentUrl.link);
-				navUrlItem.setAttribute('data-title', String(currentUrl.title));
+				navUrlItem.setAttribute('data-title', currentUrl.title ? currentUrl.title : '');
 				navUrlItem.setAttribute('data-line', String(currentUrl.line));
 
-				const handler = (event: MouseEvent) => this.handleMousedown(event);
-				navUrlItem.addEventListener('mousedown', handler);
-				this.eventListeners.push({ element: navUrlItem, handler });
+				// listen for locating and opening
+				const handlerMousedown = (event: MouseEvent) => this.handleMousedown(event);
+				navUrlItem.addEventListener('mousedown', handlerMousedown);
+				this.eventListeners.push({ element: navUrlItem, handler: handlerMousedown });
+
+				// listen for copying and global searching
+				const handlerContextmenu = (event: MouseEvent) => this.handlerContextmenu(event);
+				navUrlItem.addEventListener('contextmenu', handlerContextmenu);
+				this.eventListeners.push({ element: navUrlItem, handler: handlerContextmenu });				
 
 				if (this.plugin.settings.showFavicon) {
 					if (currentUrl.icon) {
@@ -130,7 +136,7 @@ export class UrlDisplayView extends ItemView {
 		let currentElement = event.target as HTMLElement;
 		const delegatedElement = event.currentTarget as HTMLElement;
 
-		// scroll the view based on the URL line
+		// scroll the view based on the line of URL
 		if (event.button === 0) {
 			while (currentElement !== delegatedElement) {
 				if (currentElement.classList.contains("url-display-navigation")) {
@@ -158,11 +164,63 @@ export class UrlDisplayView extends ItemView {
 			// }
 		}
 
-		// open link in browser
+		// open link in new browser tab
 		else if (event.button === 1) {
 			event.preventDefault();
 			window.open(delegatedElement.getAttribute('data-link') as string);
 		}
+	}
+
+	private readonly handlerContextmenu = (event: MouseEvent): void => {
+		const menu = new Menu();
+		const delegatedElement = event.currentTarget as HTMLElement;
+
+		menu.addItem((item) =>
+			item
+				.setTitle("Copy URL")
+				.setIcon("copy")
+				.onClick((event: PointerEvent) => {
+					const copyLink = delegatedElement.getAttribute('data-link');
+					if (this.plugin.settings.copyFormat === "inlineLink") {
+						if (this.plugin.settings.useAlias) {
+							const copyLink = delegatedElement.getAttribute('data-link');
+							const copyAlias = delegatedElement.getAttribute('data-alias');
+							navigator.clipboard.writeText(`[${copyAlias}](${copyLink})`);
+						} else {
+							const copyTitle = delegatedElement.getAttribute('data-title');
+							navigator.clipboard.writeText(`[${copyTitle}](${copyLink})`);
+						}
+					} else {
+						navigator.clipboard.writeText(copyLink!);
+					}
+					new Notice("URL copied to your clipboard.");
+				})
+		);
+
+		menu.addItem((item) =>
+			item
+				.setTitle("Search for URL")
+				.setIcon("search")
+				.onClick((event: PointerEvent) => {
+					const leaf = this.plugin.app.workspace.getLeavesOfType("search")[0];
+					if (leaf) {
+						const searchUrl = delegatedElement.getAttribute('data-link') as string;
+						const searchText = searchUrl.replace(/https?:\/\//, '');
+						// this.plugin.app.workspace.setActiveLeaf(leaf); use this can't reveal pane if the pane hided
+						this.app.workspace.revealLeaf(leaf);
+						let inputSearch = document.querySelector('input[type="search"]') as HTMLInputElement;
+						if (inputSearch) {
+							inputSearch.value = searchText;
+							let searchEvent = new Event('input');
+							inputSearch.dispatchEvent(searchEvent);
+						}
+					} else {
+						new Notice("Need to enable Search core plugin.");
+					}
+				})
+		);
+
+		menu.showAtMouseEvent(event);
 	}
 
 	private readonly removeEventListeners = (): void => {
