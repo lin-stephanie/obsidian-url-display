@@ -22,6 +22,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					this.plugin.settings.deduplicateUrls = value;
 					this.plugin.saveSettings();
+					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
 
@@ -32,7 +33,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.ignoreFileProperty)
 				.onChange((value) => {
 					this.plugin.settings.ignoreFileProperty = value;
-					this.plugin.saveSettings();
+					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
 
@@ -44,6 +45,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					this.plugin.settings.useAlias = value;
 					this.plugin.saveSettings();
+					this.plugin.processor.updateView();
 				})
 			);
 
@@ -54,7 +56,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showFavicon)
 				.onChange((value) => {
 					this.plugin.settings.showFavicon = value;
-					this.plugin.saveSettings();
+					this.plugin.processor.updateView();
 				})
 			);
 
@@ -66,8 +68,21 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					this.plugin.settings.showIndicatorIcon = value;
 					this.plugin.saveSettings();
+					this.plugin.processor.updateView();
 				})
 			);
+		
+		new Setting(containerEl)
+		.setName('Hover link preview')
+		.setDesc('if enabled, hovering over a URL item will display its hyperlink address.')
+		.addToggle(value => value
+			.setValue(this.plugin.settings.hoverLinkPreview)
+			.onChange((value) => {
+				this.plugin.settings.hoverLinkPreview = value;
+				this.plugin.saveSettings();
+				this.plugin.processor.updateView();
+			})
+		);
 		
 		new Setting(containerEl)
 		.setName('Copy format')

@@ -96,6 +96,12 @@ export class UrlDisplayView extends ItemView {
 				navUrlItem.setAttribute('data-link', currentUrl.link);
 				navUrlItem.setAttribute('data-title', currentUrl.title ? currentUrl.title : '');
 				navUrlItem.setAttribute('data-line', String(currentUrl.line));
+				
+				// hover link preview
+				if (this.plugin.settings.hoverLinkPreview) {
+					// navUrlItem.ariaLabel = currentUrl.link;
+					navUrlItem.setAttribute('aria-label', currentUrl.link);
+				}
 
 				// listen for locating and opening
 				const handlerMousedown = (event: MouseEvent) => this.handleMousedown(event);
@@ -107,6 +113,7 @@ export class UrlDisplayView extends ItemView {
 				navUrlItem.addEventListener('contextmenu', handlerContextmenu);
 				this.eventListeners.push({ element: navUrlItem, handler: handlerContextmenu });				
 
+				// show favicon or indicator icon or none
 				if (this.plugin.settings.showFavicon) {
 					if (currentUrl.icon) {
 						const navUrlItemImg = navUrlItem.createEl('img');

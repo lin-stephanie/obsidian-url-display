@@ -11,7 +11,8 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
 	useAlias: true,
 	showFavicon: false,
 	showIndicatorIcon: true,
-	copyFormat: 'justLink',
+	hoverLinkPreview: false,
+	copyFormat: 'inlineLink',
 	cacheMode: 'diskCache',
 	noticeMode: 'none',
 }

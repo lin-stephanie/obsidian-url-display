@@ -4,6 +4,7 @@ export interface UrlDisplaySettings {
 	useAlias: boolean;
 	showFavicon: boolean;
 	showIndicatorIcon: boolean;
+	hoverLinkPreview: boolean;
 	copyFormat: string;
 	cacheMode: string;
 	noticeMode: string;

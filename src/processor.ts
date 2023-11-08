@@ -180,7 +180,7 @@ export class markdownProcessor {
 	}
 
 	// https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Avoid+managing+references+to+custom+views
-	private readonly updateView = (): void => {
+	public readonly updateView = (): void => {
 		for (const leaf of this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE)) {
 			const view = leaf.view;
 			if (view instanceof UrlDisplayView) {
