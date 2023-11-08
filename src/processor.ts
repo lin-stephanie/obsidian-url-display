@@ -38,13 +38,16 @@ export class markdownProcessor {
 				this.updateView();
 			} else {
 				this.activeNotehaveUrl = true;
+				// console.log("activeView", this.activeView.file?.path)
 				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
 				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
-				// if currentMarkdownView is null, it means that the user is clicking ribbon icon
+				// if currentMarkdownView is null, it means that the user click ribbon icon to open pane
 				// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
-				const currentMarkdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
-				if (currentMarkdownView) {
-					if (currentMarkdownView.file?.path === view?.file?.path) {
+				const currentView = this.plugin.app.workspace.getActiveFileView();
+				// console.log("newView", currentView.file?.path)
+				// console.log("oldview", view.file?.path)
+				if (currentView) {
+					if (currentView.file?.path === view.file?.path) {
 						this.updateView();
 					}
 				} else {
@@ -63,12 +66,12 @@ export class markdownProcessor {
 		this.activeNoteUrlParse = null;
 	}
 
-	private readonly extractUrl = async (activeFile: TFile | null): Promise<string[] | null | undefined> => {
+	private readonly extractUrl = async (file: TFile | null): Promise<string[] | null | undefined> => {
 		this.isExtracting = true;
 		this.updateView();
 
-		if (activeFile) {
-			const activeFilContent = await this.plugin.app.vault.cachedRead(activeFile);
+		if (file) {
+			const activeFilContent = await this.plugin.app.vault.cachedRead(file);
 			return activeFilContent.match(URLREGEX);
 		}
 	}
@@ -98,10 +101,13 @@ export class markdownProcessor {
 					failedCount += 1;
 				}
 			}
-			if (failedCount === 0 && (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both")) {
-				new Notice("Successfully parsed all URLs 🎉");
-			} else if (failedCount !== 0 && (this.plugin.settings.noticeMode === "failed" || this.plugin.settings.noticeMode === "both")) {
-				new Notice(`Failed to parse ${failedCount} URLs 😥`);
+			const currentView = this.plugin.app.workspace.getActiveFileView();
+			if (currentView.file?.path === activeView.file?.path) {
+				if (failedCount === 0 && (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both")) {
+					new Notice("Successfully parsed all URLs 🎉");
+				} else if (failedCount !== 0 && (this.plugin.settings.noticeMode === "failed" || this.plugin.settings.noticeMode === "both")) {
+					new Notice(`Failed to parse ${failedCount} URLs 😥`);
+				}
 			}
 			this.isParsing = false;
 			return cleanedUrls;

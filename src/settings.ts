@@ -33,6 +33,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.ignoreFileProperty)
 				.onChange((value) => {
 					this.plugin.settings.ignoreFileProperty = value;
+					this.plugin.saveSettings();
 					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
@@ -45,7 +46,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					this.plugin.settings.useAlias = value;
 					this.plugin.saveSettings();
-					this.plugin.processor.updateView();
+					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
 
@@ -56,7 +57,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.showFavicon)
 				.onChange((value) => {
 					this.plugin.settings.showFavicon = value;
-					this.plugin.processor.updateView();
+					this.plugin.saveSettings();
+					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
 
