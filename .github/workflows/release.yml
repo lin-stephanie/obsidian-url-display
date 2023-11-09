@@ -1,0 +1,50 @@
+name: Release Obsidian Plugin
+
+run-name: Release ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - "*"
+env:
+  # Change this to the name of your plugin-id folder
+  PLUGIN_NAME: obsidian-url-display
+
+jobs:
+  build:
+    permissions:
+      contents: write
+      actions: read
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Build plugin
+        run: |
+          npm install
+          npm run build
+
+      - name: Zip plugin
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          mkdir ${{ env.PLUGIN_NAME }}
+          cp  main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
+          zip -r ${{ env.PLUGIN_NAME }}-"$tag".zip ${{ env.PLUGIN_NAME }}
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag" \
+            --title="$tag" \
+            --draft \
+            main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}-"$tag".zip
