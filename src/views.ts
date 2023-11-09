@@ -143,7 +143,7 @@ export class UrlDisplayView extends ItemView {
 		let currentElement = event.target as HTMLElement;
 		const delegatedElement = event.currentTarget as HTMLElement;
 
-		// scroll the view based on the line of URL
+		// scroll the view based on the line of URL & open link in new browser tab (click icon)
 		if (event.button === 0) {
 			while (currentElement !== delegatedElement) {
 				if (currentElement.classList.contains("url-display-navigation")) {
@@ -171,7 +171,7 @@ export class UrlDisplayView extends ItemView {
 			// }
 		}
 
-		// open link in new browser tab
+		// open link in new browser tab (middle click)
 		else if (event.button === 1) {
 			event.preventDefault();
 			window.open(delegatedElement.getAttribute('data-link') as string);

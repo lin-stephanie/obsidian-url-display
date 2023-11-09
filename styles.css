@@ -36,6 +36,7 @@
 	visibility: hidden;
 }
 
+/* cover 'pointer-events: none;' in '[aria-label] .svg-icon{}' selector */
 .url-display-item:hover .url-display-navigation {
 	visibility: visible;
 	/* width: 16px;
@@ -44,8 +45,8 @@
 	margin-right: 3px;
 	color: var(--nav-item-color);
 	cursor: pointer;
+	pointer-events: auto;  
 }
-
 
 .lucide-navigation polygon {
     transition: stroke 0.3s ease;

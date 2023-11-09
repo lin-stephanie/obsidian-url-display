@@ -70,7 +70,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 				.onChange((value) => {
 					this.plugin.settings.showIndicatorIcon = value;
 					this.plugin.saveSettings();
-					this.plugin.processor.updateView();
+					this.plugin.app.workspace.trigger("file-open");
 				})
 			);
 		
@@ -82,7 +82,7 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			.onChange((value) => {
 				this.plugin.settings.hoverLinkPreview = value;
 				this.plugin.saveSettings();
-				this.plugin.processor.updateView();
+				this.plugin.app.workspace.trigger("file-open");
 			})
 		);
 		
