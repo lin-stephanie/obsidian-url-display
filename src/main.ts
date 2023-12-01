@@ -5,6 +5,7 @@ import { UrlDisplayView } from "./views"
 import { markdownProcessor } from "./processor"
 import type { UrlDisplaySettings } from "./types"
 import { VIEW_TYPE, DEFAULT_SETTINGS } from "./constants"
+import { t } from "./lang/helper";
 
 export default class UrlDisplayPlugin extends Plugin {
 	public settings: UrlDisplaySettings;
@@ -16,7 +17,7 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		await this.loadSettings();
 		this.addSettingTab(new UrlDisplaySettingTab(this.app, this));
-		this.addRibbonIcon('external-link', 'Open or close url display', (evt: MouseEvent) => {
+		this.addRibbonIcon('external-link', t('Open URL pane'), (evt: MouseEvent) => {
 			this.openOrClosePane();
 		});
 		this.registerView(VIEW_TYPE, (leaf) => new UrlDisplayView(leaf, this, this.processor));
@@ -36,8 +37,8 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private registerCommand() {
 		this.addCommand({
-			id: 'open-or-close-pane',
-			name: 'Open or close pane',
+			id: 'open-url-pane',
+			name: t('Open URL pane'),
 			checkCallback: (checking: boolean) => {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				if (fileView) {
@@ -51,7 +52,7 @@ export default class UrlDisplayPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'refresh-list',
-			name: 'Refresh list',
+			name: t('Refresh URL pane'),
 			checkCallback: (checking: boolean) => {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];

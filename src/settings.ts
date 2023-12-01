@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
+import { t } from "./lang/helper";
 
 export class UrlDisplaySettingTab extends PluginSettingTab {
 	private plugin: UrlDisplayPlugin;
@@ -15,8 +16,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Deduplicate URLs')
-			.setDesc('If enabled, 2 same URLs in the note will only display once.')
+			.setName(t('Deduplicate URLs'))
+			.setDesc(t('Deduplicate URLs Desc'))
 			.addToggle(value => value
 				.setValue(this.plugin.settings.deduplicateUrls)
 				.onChange((value) => {
@@ -27,8 +28,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Ignore file property')
-			.setDesc('If enabled, URLs in file properties will not be extracted and displayed.')
+			.setName(t('Ignore file property'))
+			.setDesc(t('Ignore file property Desc'))
 			.addToggle(value => value
 				.setValue(this.plugin.settings.ignoreFileProperty)
 				.onChange((value) => {
@@ -39,8 +40,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Use alias')
-			.setDesc('If enabled, the text in brackets ([]) will be used to display, otherwise the website title from URL metadata will be used.')
+			.setName(t('Use alias'))
+			.setDesc(t('Use alias Desc'))
 			.addToggle(value => value
 				.setValue(this.plugin.settings.useAlias)
 				.onChange((value) => {
@@ -51,8 +52,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Show favicon')
-			.setDesc('If enabled, URL favicons will be shown in the pane.')
+			.setName(t('Show favicon'))
+			.setDesc(t('Show favicon Desc'))
 			.addToggle(value => value
 				.setValue(this.plugin.settings.showFavicon)
 				.onChange((value) => {
@@ -63,8 +64,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Show indicator icon')
-			.setDesc('If enabled, icons will be shown in the pane to identify URLs. This will only take effect when show favicon is disabled.')
+			.setName(t('Show indicator icon'))
+			.setDesc(t('Show indicator icon Desc'))
 			.addToggle(value => value
 				.setValue(this.plugin.settings.showIndicatorIcon)
 				.onChange((value) => {
@@ -75,8 +76,8 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			);
 		
 		new Setting(containerEl)
-		.setName('Hover link preview')
-		.setDesc('if enabled, hovering over a URL item will display its hyperlink address.')
+		.setName(t('Hover link preview'))
+		.setDesc(t('Hover link preview Desc'))
 		.addToggle(value => value
 			.setValue(this.plugin.settings.hoverLinkPreview)
 			.onChange((value) => {
@@ -87,11 +88,11 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 		);
 		
 		new Setting(containerEl)
-		.setName('Copy format')
-		.setDesc('Choose the format of the copied URL.')
+		.setName(t('Copy format'))
+		.setDesc(t('Copy format Desc'))
 		.addDropdown((value) => {
 			value
-				.addOptions({ justLink: 'link', inlineLink: '[alias/title](link)' })
+				.addOptions({ justLink: t('link'), inlineLink: t('[alias/title](link)') })
 				.setValue(this.plugin.settings.copyFormat)
 				.onChange((value) => {
 					this.plugin.settings.copyFormat = value;
@@ -100,11 +101,11 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName('Cache mode')
-			.setDesc('Choose cache mode for saving URL favicons. This will only take effect when show favicon is enable.')
+			.setName(t('Cache mode'))
+			.setDesc(t('Cache mode Desc'))
 			.addDropdown((value) => {
 				value
-					.addOptions({ diskCache: 'disk cache', memoryCache: 'memory cache' })
+					.addOptions({ diskCache: t('disk cache'), memoryCache: t('memory cache') })
 					.setValue(this.plugin.settings.cacheMode)
 					.onChange((value) => {
 						this.plugin.settings.cacheMode = value;
@@ -113,11 +114,11 @@ export class UrlDisplaySettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Notice mode')
-			.setDesc('Customize the type of notifications when URL parsing finishes.')
+			.setName(t('Notice type'))
+			.setDesc(t('Notice type Desc'))
 			.addDropdown((value) => {
 				value
-					.addOptions({ none: 'none', successful: 'successful', failed: 'failed', both: 'both' })
+					.addOptions({ none: t('none'), successful: t('successful'), failed: t('failed'), both: t('both') })
 					.setValue(this.plugin.settings.noticeMode)
 					.onChange((value) => {
 						this.plugin.settings.noticeMode = value;

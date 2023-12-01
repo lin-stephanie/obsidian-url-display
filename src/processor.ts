@@ -1,4 +1,4 @@
-import { MarkdownView, FileView, Notice, TFile, debounce } from "obsidian";
+import { FileView, Notice, TFile, debounce } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
 import { UrlDisplayView } from "./views"
@@ -7,6 +7,7 @@ import { MicroLinkParser } from "./parser";
 import { deduplicateObjArrByUniId } from "./utils"
 import type { UrlParse } from "./types"
 import { VIEW_TYPE, URLREGEX, SPECIAL, EXCLUDE, SUPPORTED_VIEW_TYPE } from "./constants"
+import { t } from "./lang/helper";
 
 export class markdownProcessor {
 	public plugin: UrlDisplayPlugin;
@@ -40,12 +41,12 @@ export class markdownProcessor {
 				this.activeNotehaveUrl = true;
 				// console.log("activeView", this.activeView.file?.path)
 				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
-				// if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
-				// if currentMarkdownView is null, it means that the user click ribbon icon to open pane
-				// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
+				/* if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
+				if currentMarkdownView is null, it means that the user click ribbon icon to open pane
+				WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure) */
 				const currentView = this.plugin.app.workspace.getActiveFileView();
-				// console.log("newView", currentView.file?.path)
-				// console.log("oldview", view.file?.path)
+				// console.log("new", currentView.file?.path)
+				// console.log("old", view.file?.path)
 				if (currentView) {
 					if (currentView.file?.path === view.file?.path) {
 						this.updateView();
@@ -86,7 +87,7 @@ export class markdownProcessor {
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
 			if (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both") {
-				new Notice("Successfully parsed all URLs 🎉");
+				new Notice(t('Successful'));
 			}
 			this.isParsing = false;
 			return cleanedUrls;
@@ -104,9 +105,9 @@ export class markdownProcessor {
 			const currentView = this.plugin.app.workspace.getActiveFileView();
 			if (currentView.file?.path === activeView.file?.path) {
 				if (failedCount === 0 && (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both")) {
-					new Notice("Successfully parsed all URLs 🎉");
+					new Notice(t('Successful'));
 				} else if (failedCount !== 0 && (this.plugin.settings.noticeMode === "failed" || this.plugin.settings.noticeMode === "both")) {
-					new Notice(`Failed to parse ${failedCount} URLs 😥`);
+					new Notice(t('Failed', {failedCount}));
 				}
 			}
 			this.isParsing = false;

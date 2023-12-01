@@ -3,6 +3,7 @@ import { WorkspaceLeaf, ItemView, Menu, getIcon, Notice } from "obsidian";
 import UrlDisplayPlugin from "./main";
 import { markdownProcessor } from "./processor"
 import { VIEW_TYPE, SUPPORTED_VIEW_TYPE } from "./constants";
+import { t } from "./lang/helper"
 
 export class UrlDisplayView extends ItemView {
 	private plugin: UrlDisplayPlugin;
@@ -36,7 +37,7 @@ export class UrlDisplayView extends ItemView {
 		menu
 			.addItem((item) => {
 				item
-					.setTitle('Refresh list')
+					.setTitle(t('Refresh URL pane'))
 					.setIcon('refresh-cw')
 					.onClick(async () => {
 						const fileView = this.app.workspace.getActiveFileView();
@@ -50,10 +51,10 @@ export class UrlDisplayView extends ItemView {
 		container.empty();
 
 		if (!SUPPORTED_VIEW_TYPE[this.processor.activeViewType]) {
-			container.createDiv({ cls: 'pane-empty',  text: "The view type is currently not supported."});
+			container.createDiv({ cls: 'pane-empty',  text: t('No support')});
 		}
 		else if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
-			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});
+			container.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 		else if (this.processor.isExtracting || this.processor.isParsing) {
 			this.isParsing(container);
@@ -62,7 +63,7 @@ export class UrlDisplayView extends ItemView {
 			this.updateList(container);
 		}
 		else {
-			container.createDiv({ cls: 'pane-empty',  text: "No valid URLs found."});
+			container.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 	}
 
@@ -128,7 +129,7 @@ export class UrlDisplayView extends ItemView {
 
 				navUrlItem.createSpan({
 					text: this.plugin.settings.useAlias && currentUrl.alias.trim() !== "" ? currentUrl.alias :
-						(currentUrl.title ? currentUrl.title : "Untitled"),
+						(currentUrl.title ? currentUrl.title : t('Untitled')),
 				});
 
 				const navUrlItemNavigation = getIcon("navigation") as Element;
@@ -184,7 +185,7 @@ export class UrlDisplayView extends ItemView {
 
 		menu.addItem((item) =>
 			item
-				.setTitle("Copy URL")
+				.setTitle(t('Copy item'))
 				.setIcon("copy")
 				.onClick((event: PointerEvent) => {
 					const copyLink = delegatedElement.getAttribute('data-link');
@@ -200,13 +201,13 @@ export class UrlDisplayView extends ItemView {
 					} else {
 						navigator.clipboard.writeText(copyLink!);
 					}
-					new Notice("URL copied to your clipboard.");
+					new Notice(t('Copy notice'));
 				})
 		);
 
 		menu.addItem((item) =>
 			item
-				.setTitle("Search for URL")
+				.setTitle(t('Search item'))
 				.setIcon("search")
 				.onClick((event: PointerEvent) => {
 					const leaf = this.plugin.app.workspace.getLeavesOfType("search")[0];
@@ -222,7 +223,7 @@ export class UrlDisplayView extends ItemView {
 							inputSearch.dispatchEvent(searchEvent);
 						}
 					} else {
-						new Notice("Need to enable Search core plugin.");
+						new Notice(t('Search notice'));
 					}
 				})
 		);
