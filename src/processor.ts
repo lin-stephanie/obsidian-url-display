@@ -18,8 +18,12 @@ export class markdownProcessor {
 	public isParsing: boolean;
 	public activeView: FileView;
 	public activeViewType: string;
-	public activeNotehaveUrl: boolean;
-	public activeNoteUrlParse: UrlParse[] | null | undefined;
+	public activeNotehaveUrl: undefined | boolean;
+	public activeNoteUrlParse: null | UrlParse[];
+
+	public lockView: FileView | null = null;
+	public lockUrl: UrlParse[];
+	public lockPath: string;
 
 	constructor(plugin: UrlDisplayPlugin) {
 		this.plugin = plugin;
@@ -27,67 +31,81 @@ export class markdownProcessor {
 		this.parser = new MicroLinkParser(this.plugin, this.cache);
 	}
 
-	public readonly process = debounce(async (view: FileView) => {
+	public readonly process = debounce(async (view: FileView, isHandledWhenLocked: boolean) => {
+		console.log("view", view)
+		console.log("view type", view.getViewType())
+		console.log(view.file?.path);
+
 		this.initState();
 		this.activeView = view;
-		this.activeViewType = view?.getViewType();
-		console.log(this.activeViewType)
+		this.activeViewType = view.getViewType();
 
-		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeViewType]) {
-			const activeNoteUrl = await this.extractUrl(this.activeView.file);
-			this.isExtracting = false;
-			if (!activeNoteUrl) {
-				this.updateView();
+		if (this.activeView && SUPPORTED_VIEW_TYPE.includes(this.activeViewType)) {
+			if (this.lockView && !isHandledWhenLocked) {
+				return;
 			} else {
-				this.activeNotehaveUrl = true;
-				// console.log("activeView", this.activeView.file?.path)
-				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
-				/* if currentMarkdownView is not null, it means that the user is switching md, need to judged to avoid race conditions
-				if currentMarkdownView is null, it means that the user click ribbon icon to open pane
-				WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure) */
-				const currentView = this.plugin.app.workspace.getActiveFileView();
-				// console.log("new", currentView.file?.path)
-				// console.log("old", view.file?.path)
-				if (currentView) {
-					if (currentView.file?.path === view.file?.path) {
-						this.updateView();
-					}
-				} else {
+				// start extracting
+				this.isExtracting = true;
+				this.updateView();
+				const activeNoteUrl = await this.extractUrl(this.activeView.file);
+				this.isExtracting = false;
+
+				if (!activeNoteUrl) {
+					this.activeNotehaveUrl = false;
 					this.updateView();
+				} else {
+					this.activeNotehaveUrl = true;
+					// start parsing
+					this.isParsing = true;
+					this.updateView();
+					this.activeNoteUrlParse = await this.parseUrl(this.activeView);
+					this.isParsing = false;
+					console.log(this.activeNoteUrlParse)
+
+					// if currentView is not null, it means that the user is switching md, need to judged to avoid race conditions
+					// if currentView is null, it means that the user click ribbon icon to open pane
+					// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
+					const currentView = this.plugin.app.workspace.getActiveFileView();
+					console.log("new", currentView.file?.path)
+					console.log("old", view.file?.path)
+					if (isHandledWhenLocked || currentView.file?.path === view.file?.path) {
+						this.updateView();
+					} 
 				}
-			}
+			} 
 		} else {
-			this.updateView();
+			if (this.lockView && !isHandledWhenLocked) {
+				return;
+			} else {
+				console.log("else")
+				this.updateView();
+			}
 		}
+		
 	}, 1000, true)
 
 	public readonly initState = () => {
 		this.isExtracting = false;
 		this.isParsing = false;
-		this.activeNotehaveUrl = false;
+		this.activeNotehaveUrl = undefined;
 		this.activeNoteUrlParse = null;
 	}
 
-	private readonly extractUrl = async (file: TFile | null): Promise<string[] | null | undefined> => {
-		this.isExtracting = true;
-		this.updateView();
-
+	private readonly extractUrl = async (file: TFile | null): Promise<string[] | null> => {
 		if (file) {
 			const activeFilContent = await this.plugin.app.vault.cachedRead(file);
 			return activeFilContent.match(URLREGEX);
+		} else {
+			return null
 		}
 	}
 
-	private readonly parseUrl = async (activeView: FileView): Promise<UrlParse[] | undefined> => {
-		this.isParsing = true;
-		this.updateView();
-
+	private readonly parseUrl = async (activeView: FileView): Promise<UrlParse[]> => {
 		const activeContent = await this.plugin.app.vault.cachedRead(activeView.file as TFile);
 		// const activeContent = markdownView.editor.getValue();
 		const cleanedUrls = this.locateUrl(activeContent);
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
-			this.isParsing = false;
 			return cleanedUrls;
 		} else {
 			let failedCount = 0;
@@ -108,7 +126,6 @@ export class markdownProcessor {
 					new Notice(t('Failed', {failedCount}));
 				}
 			}
-			this.isParsing = false;
 			return cleanedUrls;
 		}
 	}

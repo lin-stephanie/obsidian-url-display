@@ -1,3 +1,17 @@
+div[data-type='url-display'] .view-content {
+	padding: 0px 12px 32px 12px;
+	overflow: hidden !important;
+}
+
+div[data-type='url-display'] .nav-folder {
+	height: 100%;
+	overflow: auto;
+}
+
+div[data-type='url-display'] .pane-empty {
+	padding-top: 12px;
+}
+
 .url-display-item {
 	display: flex;
 	align-items: center;
@@ -25,6 +39,8 @@
 }
 
 .url-display-item .lucide-globe {
+	width: 17.5px;
+	height: 17.5px;
 	stroke-width: 1.3px;
 }
 
@@ -56,7 +72,7 @@
     stroke: var(--interactive-accent);
 }
 
-
+/* loading */
 .skeleton {
 	display: flex;
 	justify-content: center;

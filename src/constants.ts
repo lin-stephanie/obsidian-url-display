@@ -17,8 +17,4 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
 	noticeMode: 'none',
 }
 
-export const SUPPORTED_VIEW_TYPE: { [key: string]: boolean } = {
-	markdown: true,
-	kanban: true,
-	// canvas: true,
-}
+export const SUPPORTED_VIEW_TYPE: string[] = ["markdown", "kanban"]

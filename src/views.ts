@@ -1,4 +1,4 @@
-import { WorkspaceLeaf, ItemView, Menu, getIcon, Notice } from "obsidian";
+import { WorkspaceLeaf, ItemView, Menu, getIcon, Notice, setIcon } from "obsidian";
 
 import UrlDisplayPlugin from "./main";
 import { markdownProcessor } from "./processor"
@@ -29,11 +29,17 @@ export class UrlDisplayView extends ItemView {
 	}
 
 	public override async onOpen() {
-		const fileView = this.app.workspace.getActiveFileView();
-		this.processor.process(fileView);
+		this.drawNavHead(this.contentEl); 
+		console.log("open", this.processor.lockView)
+		if (this.processor.lockView) {
+			this.processor.process(this.processor.lockView, true);
+		} else {
+			const fileView = this.app.workspace.getActiveFileView();
+			this.processor.process(fileView, false);
+		}
 	}
 
-	public readonly onHeaderMenu = (menu: Menu): void => {
+	/* public readonly onHeaderMenu = (menu: Menu): void => {
 		menu
 			.addItem((item) => {
 				item
@@ -44,53 +50,123 @@ export class UrlDisplayView extends ItemView {
 						this.processor.process(fileView);
 					});
 			})
+	} */
+
+	public readonly onPaneMenu = (menu: Menu): void => {
+		// source: sidebar-context-menu
+		menu
+			.addItem((item) => {
+				item
+					.setTitle(t('Close'))
+					.setIcon('x')
+					.onClick(() => this.plugin.app.workspace.detachLeavesOfType(VIEW_TYPE));
+			})
+	}
+
+	public readonly drawNavHead = (viewContent: Element): void => {
+		const navHeader = createDiv("nav-header");
+		const navButtonContainer = navHeader.createDiv("nav-buttons-container");
+
+		// add icon for refresh
+		const navActionButtonRefresh = navButtonContainer.createDiv("clickable-icon nav-action-button");
+		navActionButtonRefresh.ariaLabel = t('Refresh URL pane');
+		// navActionButtonRefresh.appendChild(getIcon("refresh-cw")!);
+		setIcon(navActionButtonRefresh, "refresh-cw");
+
+		navActionButtonRefresh.addEventListener("click", (event: MouseEvent) => {
+			const isSameView = this.processor.lockView === this.processor.activeView;
+			console.log(this.processor.lockView)
+			console.log(this.processor.activeView)
+			if (!this.processor.lockView) {
+				const fileView = this.app.workspace.getActiveFileView();
+				this.processor.process(fileView, false);
+			} 
+			else if (isSameView) {
+				this.processor.process(this.processor.lockView, true);
+			} else {
+				new Notice(t('Unable to refresh'));
+			}
+		});
+
+		// add icon to lock the view (remains unchanged)
+		const navActionButtonLock = navButtonContainer.createDiv("clickable-icon nav-action-button url-dispaly-lock");
+		navActionButtonLock.ariaLabel = t('Lock URL pane');
+
+		if (this.processor.lockView) {
+			setIcon(navActionButtonLock, "lock");	
+			navActionButtonLock.classList.add('is-active');
+		} else {
+			setIcon(navActionButtonLock, "unlock");	
+		}
+
+		navActionButtonLock.addEventListener("click", (event: MouseEvent) => {
+			if (!this.processor.lockView){
+				setIcon(navActionButtonLock, "lock");	
+				navActionButtonLock.classList.add('is-active');
+				this.processor.lockView = this.processor.activeView;
+			} else {
+				setIcon(navActionButtonLock, "unlock");	
+				navActionButtonLock.classList.remove('is-active');
+				this.processor.lockView = null;
+				const fileView = this.plugin.app.workspace.getActiveFileView(); 
+				this.processor.process(fileView, false);
+			}
+		});
+		
+		viewContent.appendChild(navHeader);
+
+		const navContent = createDiv("nav-folder mod-root");
+		viewContent.appendChild(navContent);
 	}
 
 	public readonly updateDisplay = (): void => {
-		const container = this.containerEl.children[1];
-		container.empty();
-
-		if (!SUPPORTED_VIEW_TYPE[this.processor.activeViewType]) {
-			container.createDiv({ cls: 'pane-empty',  text: t('No support')});
+		const navContent = this.contentEl.children[1];
+		navContent.empty();
+		console.log(SUPPORTED_VIEW_TYPE.includes(this.processor.activeViewType))
+		console.log(this.processor.activeViewType)
+		if (!SUPPORTED_VIEW_TYPE.includes(this.processor.activeViewType)) {
+			console.log(1)
+			navContent.createDiv({ cls: 'pane-empty',  text: t('No support')});
 		}
 		else if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
-			container.createDiv({ cls: 'pane-empty',  text: t('No found')});
+			console.log(2)
+			navContent.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 		else if (this.processor.isExtracting || this.processor.isParsing) {
-			this.isParsing(container);
+			console.log(3)
+			this.isParsing(navContent);
 		}
 		else if (!this.processor.isParsing && this.processor.activeNoteUrlParse?.length !== 0) {
-			this.updateList(container);
+			console.log(4)
+			this.updateList(navContent);
 		}
 		else {
-			container.createDiv({ cls: 'pane-empty',  text: t('No found')});
+			console.log(0)
+			navContent.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 	}
 
-	private readonly isParsing = (container: Element): void => {
-		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
-		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
+	private readonly isParsing = (navContent: Element): void => {
+		const navChildren = navContent.createDiv('nav-folder-children');
 
 		for (let index = 0; index < 3; index++) {
-			const navUrl = childrenEl.createEl("div", { cls: 'tree-item nav-file' });
-			const navUrlItem = navUrl.createEl('div', { cls: 'nav-file-title url-display-item' });
-			const item = navUrlItem.createDiv({ cls: 'skeleton' });
-			item.createDiv({ cls: 'skeleton-square' });
-			item.createDiv({ cls: 'skeleton-line' });
+			const navUrl = navChildren.createDiv('tree-item nav-file');
+			const navUrlItem = navUrl.createDiv('nav-file-title url-display-item');
+			const item = navUrlItem.createDiv('skeleton');
+			item.createDiv('skeleton-square');
+			item.createDiv('skeleton-line');
 		}
 
-		container.appendChild(rootEl);
+		navContent.appendChild(navChildren);
 	}
 
-	public readonly updateList = (container: Element): void => {
+	public readonly updateList = (navContent: Element): void => {
 		this.removeEventListeners();
-
-		const rootEl = createDiv({ cls: 'nav-folder mod-root' });
-		const childrenEl = rootEl.createDiv({ cls: 'nav-folder-children' });
+		const navChildren = navContent.createDiv('nav-folder-children');
 
 		if (this.processor.activeNoteUrlParse) {
 			this.processor.activeNoteUrlParse.forEach((currentUrl) => {
-				const navUrl = childrenEl.createDiv({ cls: 'tree-item nav-file' });
+				const navUrl = navChildren.createDiv({ cls: 'tree-item nav-file' });
 				const navUrlItem = navUrl.createDiv({ cls: 'nav-file-title url-display-item' });
 
 				navUrlItem.setAttribute('data-alias', currentUrl.alias);
@@ -137,7 +213,8 @@ export class UrlDisplayView extends ItemView {
 				navUrlItemNavigation.classList.add('url-display-navigation');
 			})
 		}
-		container.appendChild(rootEl);
+
+		navContent.appendChild(navChildren);
 	}
 
 	private readonly handleMousedown = (event: MouseEvent): void => {

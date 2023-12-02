@@ -32,27 +32,38 @@ export default {
 	/* option */
 	"link": "链接",
 	"[alias/title](link)": "[别名/标题](链接)",
+
 	"disk cache": "硬盘缓存",
 	"memory cache": "内存缓存",
+	
 	"none": "不需要",
 	"successful": "成功时",
 	"failed": "失败时",
 	"both": "都需要",
 
-	/* view */
+	/* pene */
 	"Refresh URL pane": "刷新 URL 面板",
+	"Lock URL pane": "锁定 URL 面板",
+
 	"No support": "不支持提取该视图类型中的 URL。",
 	"No found": "未找到有效的 URL。",
 	"Untitled": "无标题",
+
 	"Copy item": "复制 URL",
 	"Search item": "查找 URL",
 
 	/* notice */
 	"Successful": "成功获取所有 URL 元数据 🎉",
 	"Failed": "未能获取到 {failedCount} 个 URL 元数据 😥",
+
 	"Copy notice": "URL 已复制到剪贴板",
 	"Search notice": "需先启用“搜索”核心插件",
+	
+	"Unable to refresh": "当前状态无法刷新 URL 面板",
 
 	/* ribbon */
 	"Open URL pane": "打开 URL 面板",
+
+	/* menu */
+	"Close": "关闭",
 };

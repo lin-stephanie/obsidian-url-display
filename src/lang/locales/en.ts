@@ -32,27 +32,38 @@ export default {
 	/* option */
 	"link": "link",
 	"[alias/title](link)": "[alias/title](link)",
+	
 	"disk cache": "disk cache",
 	"memory cache": "memory cache",
+
 	"none": "none",
 	"successful": "successful",
 	"failed": "failed",
 	"both": "both",
 
-	/* view */
+	/* pane */
 	"Refresh URL pane": "Refresh URL pane",
+	"Lock URL pane": "Lock URL pane",
+
 	"No support": "Extraction of URLs from this type of view is not supported.",
 	"No found": "No valid URLs found.",
 	"Untitled": "Untitled",
+
 	"Copy item": "Copy URL",
 	"Search item": "Search for URL",
 
 	/* notice */
 	"Successful": "Successfully retrieved all URL metadata 🎉",
 	"Failed": "Failed to retrieve metadata for {failedCount} URLs 😥",
-	"Copy notice": "URL copied to your clipboard.",
-	"Search notice": "Need to enable Search core plugin.",
+
+	"Copy notice": "URL copied to your clipboard",
+	"Search notice": "Need to enable Search core plugin",
+
+	"Unable to refresh": "Unable to refresh the pane in the current state",
 
 	/* ribbon */
 	"Open URL pane": "Open URL pane",
+
+	/* menu */
+	"Close": "Close",
 };

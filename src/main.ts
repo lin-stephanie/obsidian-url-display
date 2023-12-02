@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Notice, Plugin } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -12,7 +12,7 @@ export default class UrlDisplayPlugin extends Plugin {
 	public processor: markdownProcessor;
 
 	public override async onload() {
-		// console.clear();
+		console.clear();
 		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
 		await this.loadSettings();
@@ -51,14 +51,23 @@ export default class UrlDisplayPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'refresh-list',
+			id: 'refresh-url-pane',
 			name: t('Refresh URL pane'),
 			checkCallback: (checking: boolean) => {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
 				if (fileView && urlDisplayView) {
 					if (!checking) {
-						this.processor.process(fileView);
+						const isSameView = this.processor.lockView === this.processor.activeView;
+						if (!this.processor.lockView) {
+							const fileView = this.app.workspace.getActiveFileView();
+							this.processor.process(fileView, false);
+						} 
+						else if (isSameView) {
+							this.processor.process(this.processor.lockView, true);
+						} else {
+							new Notice(t('Unable to refresh'));
+						}
 					}
 					return true;
 				}
@@ -70,7 +79,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		this.registerEvent(this.app.workspace.on('file-open', (file) => {
 			// const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			const fileView = this.app.workspace.getActiveFileView(); 
-			this.processor.process(fileView);
+			this.processor.process(fileView, false);
 		}));
 	}
 
