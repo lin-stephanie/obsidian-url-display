@@ -217,7 +217,7 @@ export class UrlDisplayView extends ItemView {
 		navContent.appendChild(navChildren);
 	}
 
-	private readonly handleMousedown = (event: MouseEvent): void => {
+	private readonly handleMousedown = async (event: MouseEvent): Promise<void> => {
 		let currentElement = event.target as HTMLElement;
 		const delegatedElement = event.currentTarget as HTMLElement;
 
@@ -231,8 +231,20 @@ export class UrlDisplayView extends ItemView {
 				currentElement = currentElement.parentElement as HTMLElement;
 			}
 			if (this.processor.activeViewType === "markdown") {
-				const line = Number(delegatedElement.getAttribute('data-line'));
-				this.processor.activeView.setEphemeralState({ line });
+				console.log("scroll")
+				console.log(this.processor.lockView)
+				console.log(this.processor.activeView)
+				console.log(this.processor.lockView?.file)
+				const isSameView = this.processor.lockView === this.processor.activeView;
+				if (!isSameView && this.processor.lockView?.file){
+					console.log("nav")
+					await this.app.workspace.getLeaf().openFile(this.processor.lockView.file);
+					const line = Number(delegatedElement.getAttribute('data-line'));
+					this.processor.activeView.setEphemeralState({ line });
+				} else {
+					const line = Number(delegatedElement.getAttribute('data-line'));
+					this.processor.activeView.setEphemeralState({ line });
+				}
 			} 
 			else if (this.processor.activeViewType === "kanban") {
 				const linkElement = document.querySelector(`a[href="${delegatedElement.getAttribute('data-link')}"].external-link`);

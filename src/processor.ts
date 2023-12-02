@@ -42,6 +42,7 @@ export class markdownProcessor {
 
 		if (this.activeView && SUPPORTED_VIEW_TYPE.includes(this.activeViewType)) {
 			if (this.lockView && !isHandledWhenLocked) {
+				console.log("lockView", this.lockView)
 				return;
 			} else {
 				// start extracting
