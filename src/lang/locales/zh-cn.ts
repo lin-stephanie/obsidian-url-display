@@ -9,10 +9,10 @@ export default {
 	"Ignore file property Desc": "启用后，不会提取和显示文档属性中存在的 URL。",
 
 	"Use alias": "使用别名",
-	"Use alias Desc": "启用后，[]内部的文本将显示在面板中，否则从 URL 元数据中获取标题显示。",
+	"Use alias Desc": "启用后，[]内的文本将显示在面板中，否则从 URL 元数据中获取标题显示。",
 
 	"Show favicon": "显示网站图标",
-	"Show favicon Desc": "启用后，URL 对应网站图标将显示在面板中。",
+	"Show favicon Desc": "启用后，将从 URL 元数据中获取 URL 图标显示在面板中。",
 
 	"Show indicator icon": "显示标识图标",
 	"Show indicator icon Desc": "启用后，用于标识 URL 的图标将显示在面板中（仅在禁用显示网站图标时生效）。",
@@ -26,8 +26,8 @@ export default {
 	"Cache mode": "缓存模式",
 	"Cache mode Desc": "选择如何缓存获取到的网站图标（仅在启用显示网站图标时生效）。",
 
-	"Notice type": "提示类型",
-	"Notice type Desc": "选择 URL 解析完成时所想要获取到的提示。",
+	"Notice type": "通知类型",
+	"Notice type Desc": "当请求 URL 元数据完成后，想要接收到哪种通知。",
 
 	/* option */
 	"link": "链接",

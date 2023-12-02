@@ -31,6 +31,7 @@ export class markdownProcessor {
 		this.initState();
 		this.activeView = view;
 		this.activeViewType = view?.getViewType();
+		console.log(this.activeViewType)
 
 		if (this.activeView && SUPPORTED_VIEW_TYPE[this.activeViewType]) {
 			const activeNoteUrl = await this.extractUrl(this.activeView.file);
@@ -86,9 +87,6 @@ export class markdownProcessor {
 		const cleanedUrls = this.locateUrl(activeContent);
 
 		if (this.plugin.settings.useAlias && !this.plugin.settings.showFavicon) {
-			if (this.plugin.settings.noticeMode === "successful" || this.plugin.settings.noticeMode === "both") {
-				new Notice(t('Successful'));
-			}
 			this.isParsing = false;
 			return cleanedUrls;
 		} else {
@@ -149,7 +147,7 @@ export class markdownProcessor {
 			}
 
 			// get capturing group from match & remove markdown syntax
-			const alias = match[1]?.replace(/(\*\*|__|~~|\*|==|`)/g, '').trim() || '';
+			const alias = match[1]?.replace(/(\*\*|__|\*|_|~~|==|`)/g, '').trim() || '';
 			const link = match[2] || match[3];
 
 			// check if the URL has an excluded extension

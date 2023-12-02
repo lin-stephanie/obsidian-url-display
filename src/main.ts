@@ -18,7 +18,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		await this.loadSettings();
 		this.addSettingTab(new UrlDisplaySettingTab(this.app, this));
 		this.addRibbonIcon('external-link', t('Open URL pane'), (evt: MouseEvent) => {
-			this.openOrClosePane();
+			this.activateView();
 		});
 		this.registerView(VIEW_TYPE, (leaf) => new UrlDisplayView(leaf, this, this.processor));
 		this.registerCommand();
@@ -43,7 +43,7 @@ export default class UrlDisplayPlugin extends Plugin {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				if (fileView) {
 					if (!checking) {
-						this.openOrClosePane();
+						this.activateView();
 					}
 					return true;
 				}
@@ -68,23 +68,17 @@ export default class UrlDisplayPlugin extends Plugin {
 
 	private registerListener() {
 		this.registerEvent(this.app.workspace.on('file-open', (file) => {
-			/* const currentMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-			this.processor.process(currentMarkdownView); */
+			// const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			const fileView = this.app.workspace.getActiveFileView(); 
 			this.processor.process(fileView);
 		}));
 	}
-	
-	private openOrClosePane() {
-		if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length) {
-			this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-		} else {
-			this.activateView();
-		}
-	}
 
 	private async activateView () {
-		if (this.app.workspace.getActiveFileView()) {
+		if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length) {
+			const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+			this.app.workspace.revealLeaf(leaf);
+		} else {
 			const leaf = this.app.workspace.getRightLeaf(false);
 			await leaf.setViewState({ type: VIEW_TYPE, active: true });
 			this.app.workspace.revealLeaf(leaf);

@@ -12,7 +12,7 @@ export default {
 	"Use alias Desc": "If enabled, the text in brackets ([]) will be used to display, otherwise the website title from URL metadata will be used.",
 
 	"Show favicon": "Show favicon",
-	"Show favicon Desc": "If enabled, URL favicons will be shown in the pane.",
+	"Show favicon Desc": "If enabled, the URL metadata will be retrieved, and the favicons will be shown in the pane.",
 
 	"Show indicator icon": "Show indicator icon",
 	"Show indicator icon Desc": "If enabled, icons will be shown in the pane to identify URLs. This will only take effect when show favicon is disabled.",
@@ -27,7 +27,7 @@ export default {
 	"Cache mode Desc": "Choose cache mode for saving URL favicons. This will only take effect when show favicon is enable.",
 
 	"Notice type": "Notice type",
-	"Notice type Desc": "Customize the type of notifications when URL parsing finishes.",
+	"Notice type Desc": "Choose the type of notifications you want to get after requesting URL metadata.",
 
 	/* option */
 	"link": "link",
