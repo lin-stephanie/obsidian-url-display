@@ -30,27 +30,17 @@ export class UrlDisplayView extends ItemView {
 
 	public override async onOpen() {
 		this.drawNavHead(this.contentEl); 
-		console.log("open", this.processor.lockView)
-		if (this.processor.lockView) {
-			this.processor.process(this.processor.lockView, true);
+		console.log("open", this.plugin.settings.lockUrl)
+		if (this.plugin.settings.lockUrl) {
+			this.processor.activeNoteUrlParse = this.plugin.settings.lockUrl;
+			const navContent = this.contentEl.children[1];
+			navContent.empty();
+			this.updateList(navContent);
 		} else {
 			const fileView = this.app.workspace.getActiveFileView();
-			this.processor.process(fileView, false);
+			this.processor.process(fileView);
 		}
 	}
-
-	/* public readonly onHeaderMenu = (menu: Menu): void => {
-		menu
-			.addItem((item) => {
-				item
-					.setTitle(t('Refresh URL pane'))
-					.setIcon('refresh-cw')
-					.onClick(async () => {
-						const fileView = this.app.workspace.getActiveFileView();
-						this.processor.process(fileView);
-					});
-			})
-	} */
 
 	public readonly onPaneMenu = (menu: Menu): void => {
 		// source: sidebar-context-menu
@@ -70,46 +60,43 @@ export class UrlDisplayView extends ItemView {
 		// add icon for refresh
 		const navActionButtonRefresh = navButtonContainer.createDiv("clickable-icon nav-action-button");
 		navActionButtonRefresh.ariaLabel = t('Refresh URL pane');
-		// navActionButtonRefresh.appendChild(getIcon("refresh-cw")!);
 		setIcon(navActionButtonRefresh, "refresh-cw");
 
 		navActionButtonRefresh.addEventListener("click", (event: MouseEvent) => {
-			const isSameView = this.processor.lockView === this.processor.activeView;
-			console.log(this.processor.lockView)
-			console.log(this.processor.activeView)
-			if (!this.processor.lockView) {
-				const fileView = this.app.workspace.getActiveFileView();
-				this.processor.process(fileView, false);
-			} 
-			else if (isSameView) {
-				this.processor.process(this.processor.lockView, true);
-			} else {
-				new Notice(t('Unable to refresh'));
-			}
+			const fileView = this.app.workspace.getActiveFileView();
+			this.processor.process(fileView);
 		});
 
 		// add icon to lock the view (remains unchanged)
 		const navActionButtonLock = navButtonContainer.createDiv("clickable-icon nav-action-button url-dispaly-lock");
 		navActionButtonLock.ariaLabel = t('Lock URL pane');
 
-		if (this.processor.lockView) {
+		if (this.plugin.settings.lockUrl) {
 			setIcon(navActionButtonLock, "lock");	
 			navActionButtonLock.classList.add('is-active');
+			navActionButtonRefresh.ariaDisabled = "true";
 		} else {
-			setIcon(navActionButtonLock, "unlock");	
+			setIcon(navActionButtonLock, "unlock");
+			navActionButtonRefresh.ariaDisabled = "false";	
 		}
 
-		navActionButtonLock.addEventListener("click", (event: MouseEvent) => {
-			if (!this.processor.lockView){
-				setIcon(navActionButtonLock, "lock");	
-				navActionButtonLock.classList.add('is-active');
-				this.processor.lockView = this.processor.activeView;
-			} else {
+		navActionButtonLock.addEventListener("click", async (event: MouseEvent) => {
+			if (this.plugin.settings.lockUrl){
 				setIcon(navActionButtonLock, "unlock");	
 				navActionButtonLock.classList.remove('is-active');
-				this.processor.lockView = null;
+				navActionButtonRefresh.ariaDisabled = "false";
+				this.plugin.settings.lockPath = '';
+				this.plugin.settings.lockUrl = null;
+				await this.plugin.saveData(this.plugin.settings);
 				const fileView = this.plugin.app.workspace.getActiveFileView(); 
-				this.processor.process(fileView, false);
+				this.processor.process(fileView);
+			} else {
+				setIcon(navActionButtonLock, "lock");	
+				navActionButtonLock.classList.add('is-active');
+				navActionButtonRefresh.ariaDisabled = "true";
+				this.plugin.settings.lockPath = this.processor.activeView.file?.path;
+				this.plugin.settings.lockUrl = this.processor.activeNoteUrlParse;
+				await this.plugin.saveData(this.plugin.settings);
 			}
 		});
 		
@@ -122,8 +109,7 @@ export class UrlDisplayView extends ItemView {
 	public readonly updateDisplay = (): void => {
 		const navContent = this.contentEl.children[1];
 		navContent.empty();
-		console.log(SUPPORTED_VIEW_TYPE.includes(this.processor.activeViewType))
-		console.log(this.processor.activeViewType)
+
 		if (!SUPPORTED_VIEW_TYPE.includes(this.processor.activeViewType)) {
 			console.log(1)
 			navContent.createDiv({ cls: 'pane-empty',  text: t('No support')});
@@ -197,10 +183,10 @@ export class UrlDisplayView extends ItemView {
 						navUrlItemImg.setAttribute("src", currentUrl.icon);
 						navUrlItemImg.setAttr('draggable', 'false');
 					} else {
-						navUrlItem.appendChild(getIcon("globe") as Element);
+						setIcon(navUrlItem, "globe");
 					}
 				} else if (this.plugin.settings.showIndicatorIcon) {
-					navUrlItem.appendChild(getIcon("globe") as Element);
+					setIcon(navUrlItem, "globe");
 				}
 
 				navUrlItem.createSpan({
@@ -217,7 +203,7 @@ export class UrlDisplayView extends ItemView {
 		navContent.appendChild(navChildren);
 	}
 
-	private readonly handleMousedown = async (event: MouseEvent): Promise<void> => {
+	private readonly handleMousedown = (event: MouseEvent): void => {
 		let currentElement = event.target as HTMLElement;
 		const delegatedElement = event.currentTarget as HTMLElement;
 
@@ -231,22 +217,20 @@ export class UrlDisplayView extends ItemView {
 				currentElement = currentElement.parentElement as HTMLElement;
 			}
 			if (this.processor.activeViewType === "markdown") {
-				console.log("scroll")
-				console.log(this.processor.lockView)
-				console.log(this.processor.activeView)
-				console.log(this.processor.lockView?.file)
-				const isSameView = this.processor.lockView === this.processor.activeView;
-				if (!isSameView && this.processor.lockView?.file){
-					console.log("nav")
-					await this.app.workspace.getLeaf().openFile(this.processor.lockView.file);
-					const line = Number(delegatedElement.getAttribute('data-line'));
-					this.processor.activeView.setEphemeralState({ line });
-				} else {
-					const line = Number(delegatedElement.getAttribute('data-line'));
-					this.processor.activeView.setEphemeralState({ line });
+				const isSame = this.processor.activeView.file?.path === this.plugin.settings.lockPath;
+				if (this.plugin.settings.lockUrl && !isSame) {
+					new Notice(t('Unable to locate'));
+					return;
 				}
+				const line = Number(delegatedElement.getAttribute('data-line'));
+				this.processor.activeView.setEphemeralState({ line });
 			} 
 			else if (this.processor.activeViewType === "kanban") {
+				const isSame = this.processor.activeView.file?.path === this.plugin.settings.lockPath;
+				if (this.plugin.settings.lockUrl && !isSame) {
+					new Notice(t('Unable to locate'));
+					return;
+				}
 				const linkElement = document.querySelector(`a[href="${delegatedElement.getAttribute('data-link')}"].external-link`);
 				if (linkElement) { 
 					linkElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: "center" });
@@ -303,7 +287,7 @@ export class UrlDisplayView extends ItemView {
 					if (leaf) {
 						const searchUrl = delegatedElement.getAttribute('data-link') as string;
 						const searchText = searchUrl.replace(/https?:\/\//, '');
-						// this.plugin.app.workspace.setActiveLeaf(leaf); use this can't reveal pane if the pane hided
+						// this.plugin.app.workspace.setActiveLeaf(leaf); --- use this can't reveal pane if the pane hided
 						this.app.workspace.revealLeaf(leaf);
 						let inputSearch = document.querySelector('input[type="search"]') as HTMLInputElement;
 						if (inputSearch) {

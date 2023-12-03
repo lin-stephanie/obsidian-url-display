@@ -59,7 +59,7 @@ export default {
 	"Copy notice": "URL 已复制到剪贴板",
 	"Search notice": "需先启用“搜索”核心插件",
 	
-	"Unable to refresh": "当前状态无法刷新 URL 面板",
+	"Unable to locate": "当前无法定位 URL",
 
 	/* ribbon */
 	"Open URL pane": "打开 URL 面板",

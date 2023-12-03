@@ -59,7 +59,7 @@ export default {
 	"Copy notice": "URL copied to your clipboard",
 	"Search notice": "Need to enable Search core plugin",
 
-	"Unable to refresh": "Unable to refresh the pane in the current state",
+	"Unable to locate": "Currently Unable to locate the URL",
 
 	/* ribbon */
 	"Open URL pane": "Open URL pane",

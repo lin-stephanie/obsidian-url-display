@@ -8,6 +8,8 @@ export interface UrlDisplaySettings {
 	copyFormat: string;
 	cacheMode: string;
 	noticeMode: string;
+	lockPath: string | undefined;
+	lockUrl: UrlParse[] | null;
 }
 
 export interface UrlParse {

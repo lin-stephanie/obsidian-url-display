@@ -18,12 +18,8 @@ export class markdownProcessor {
 	public isParsing: boolean;
 	public activeView: FileView;
 	public activeViewType: string;
-	public activeNotehaveUrl: undefined | boolean;
-	public activeNoteUrlParse: null | UrlParse[];
-
-	public lockView: FileView | null = null;
-	public lockUrl: UrlParse[];
-	public lockPath: string;
+	public activeNotehaveUrl: boolean | undefined;
+	public activeNoteUrlParse: UrlParse[] | null;
 
 	constructor(plugin: UrlDisplayPlugin) {
 		this.plugin = plugin;
@@ -31,18 +27,22 @@ export class markdownProcessor {
 		this.parser = new MicroLinkParser(this.plugin, this.cache);
 	}
 
-	public readonly process = debounce(async (view: FileView, isHandledWhenLocked: boolean) => {
+	public readonly process = debounce(async (view: FileView) => {
 		console.log("view", view)
 		console.log("view type", view.getViewType())
-		console.log(view.file?.path);
+		console.log("view file", view.file)
+		console.log("path", view.file?.path);
+		console.log("lockUrl", this.plugin.settings.lockUrl)
 
 		this.initState();
 		this.activeView = view;
 		this.activeViewType = view.getViewType();
 
+		if (this.plugin.settings.lockUrl) return;
+
 		if (this.activeView && SUPPORTED_VIEW_TYPE.includes(this.activeViewType)) {
-			if (this.lockView && !isHandledWhenLocked) {
-				console.log("lockView", this.lockView)
+			if (this.plugin.settings.lockUrl) {
+				console.log("lockUrl", this.plugin.settings.lockUrl)
 				return;
 			} else {
 				// start extracting
@@ -64,18 +64,17 @@ export class markdownProcessor {
 					console.log(this.activeNoteUrlParse)
 
 					// if currentView is not null, it means that the user is switching md, need to judged to avoid race conditions
-					// if currentView is null, it means that the user click ribbon icon to open pane
 					// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
 					const currentView = this.plugin.app.workspace.getActiveFileView();
 					console.log("new", currentView.file?.path)
 					console.log("old", view.file?.path)
-					if (isHandledWhenLocked || currentView.file?.path === view.file?.path) {
+					if (currentView.file?.path === view.file?.path) {
 						this.updateView();
 					} 
 				}
 			} 
 		} else {
-			if (this.lockView && !isHandledWhenLocked) {
+			if (this.plugin.settings.lockUrl) {
 				return;
 			} else {
 				console.log("else")

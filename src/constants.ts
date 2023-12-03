@@ -15,6 +15,8 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
 	copyFormat: 'inlineLink',
 	cacheMode: 'diskCache',
 	noticeMode: 'none',
+	lockPath: '',
+	lockUrl: [],
 }
 
 export const SUPPORTED_VIEW_TYPE: string[] = ["markdown", "kanban"]

@@ -56,18 +56,10 @@ export default class UrlDisplayPlugin extends Plugin {
 			checkCallback: (checking: boolean) => {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
-				if (fileView && urlDisplayView) {
+				if (fileView && urlDisplayView && !this.settings.lockUrl) {
 					if (!checking) {
-						const isSameView = this.processor.lockView === this.processor.activeView;
-						if (!this.processor.lockView) {
-							const fileView = this.app.workspace.getActiveFileView();
-							this.processor.process(fileView, false);
-						} 
-						else if (isSameView) {
-							this.processor.process(this.processor.lockView, true);
-						} else {
-							new Notice(t('Unable to refresh'));
-						}
+						const fileView = this.app.workspace.getActiveFileView();
+						this.processor.process(fileView);
 					}
 					return true;
 				}
@@ -79,7 +71,7 @@ export default class UrlDisplayPlugin extends Plugin {
 		this.registerEvent(this.app.workspace.on('file-open', (file) => {
 			// const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
 			const fileView = this.app.workspace.getActiveFileView(); 
-			this.processor.process(fileView, false);
+			this.processor.process(fileView);
 		}));
 	}
 
