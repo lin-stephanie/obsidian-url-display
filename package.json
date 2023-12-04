@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"lint": "eslint . --ext .ts --fix",
+		"lint": "eslint . --ext .ts --report-unused-disable-directives --max-warnings 0",
+		"lint:fix": "eslint . --ext .ts --fix",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],

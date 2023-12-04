@@ -1,6 +1,6 @@
 # Obsidian URL Display
 
-The plugin can extract and display external URLs from the active note in [Obsidian](https://obsidian.md/). Check out the [demo](https://youtu.be/Xx_9wOXePLo) on how to use this plugin.
+The plugin can extract and display external URLs from the active note in [Obsidian](https://obsidian.md/).
 
 ![screenshot](https://github.com/lin-stephanie/obsidian-url-display/blob/main/docs/screenshot.png)
 
@@ -8,6 +8,7 @@ The plugin can extract and display external URLs from the active note in [Obsidi
 
 - Extract external URLs in the active note (including [kanban](https://github.com/mgmeyers/obsidian-kanban)) and show them in the pane.
 - Customize the content displayed in the pane through plugin settings page, including deduplicate URLs, ignore file property, use alias, show favicon, show indicator icon, hover link preview...
+- When switching between notes, the URL list is automatically refreshed to the current note; if the URL list is locked, it remains unchanged.
 - Left-click to navigate to the location of the URL in the active note.
 - Middle-click (or click the navigation icon for special case) to open the URL in a new browser tab.
 - Right-click to copy URL or conduct a global search.
@@ -21,22 +22,27 @@ The plugin can extract and display external URLs from the active note in [Obsidi
 
 **Open the pane**
 
-- Select on the plugin icon in the ribbon, or:
-- Open the command palette and select the command `URL Display: Open or close pane`.
+- Select on the plugin icon in the ribbon or open the command palette and select the command `URL Display: Open URL pane`.
+- If you want to turn off the pane you need to right select on the plugin icon in the sidebar and select "Close".
 
-**Update URL list** 
+**Refresh URL list** 
 
-- Right select on the plugin icon in the sidebar and select `Refresh list`, or:
-- Open the command palette and select the command `URL Display: Refresh list`.
+- Select the Refresh icon on the toolbar in the pane or open the command palette and select the command `URL Display: Refresh URL list`.
+- If you make changes to your notes, it is necessary to trigger a refresh of the URL list manually, or trigger a refresh by switching notes to ensure that the URL list is up to date.
+
+**Lock URL list** 
+
+- Select the Lock icon on the toolbar in the pane.
+- With Locked URL List enabled, you will not be able to select the Refresh icon and will only be able to locate URLs while the corresponding note is active.
+- After enabling Locked URL List, if you find an error in locating URLs, or want to refresh the URL list, or change the plugin settings, please disable and re-enable Locked URL List under the corresponding notes.
 
 **Please note**
 
-- Normally, when you switch between different notes, the URL List will be automatically refreshed.
-- After you modify URL, you need to manually refresh the URL list as mentioned above, or trigger refresh by switching notes.
 - If you want to display the URL list as soon as possible, it is recommended that enable `Use alias` and disable `Show favicon`.
 - If enable `Deduplicate URLs`, you can only navigate to the first occurrence of the URL.
 - URLs in inline codes and code blocks are not extracted and displayed.
 - For navigating to the location of the URL in callout or table, it dosen't work in Live Preview, and it is not obvious enough in Reading View, but it is okay in Source Mode.
+- Unable to locate URLs in properties.
 
 ## Details
 
@@ -50,7 +56,7 @@ https://example.org
 
 **About URL metadata**
 
-If you enable `Show favicon` or disable `Use alias` in the plugin settings, the plugin will use the free [MicroLink API](https://microlink.io) (`https://api.microlink.io?url=`) to request URL metadata, but there is a limitation: 50 requests/day. Don't worry, the plugin will cache the metadata to avoid repeated requests of same URLs. Note that it takes a certain amount of time to request URL metadata (depending on the number of URLs in the note). 
+If you enable `Show favicon` or disable `Use alias` in the plugin settings, the plugin will use the free [MicroLink API](https://microlink.io) (`https://api.microlink.io?url=`) to request URL metadata (to get the website title or favicon), but there is a limitation: 50 requests/day. Don't worry, the plugin will cache the metadata to avoid repeated requests of same URLs. Note that it takes a certain amount of time to request URL metadata (depending on the number of URLs in the note). 
 
 **About cache mode**
 
@@ -59,9 +65,10 @@ If you want to show favicons faster, you can set cache mode to `memory cache`, b
 ## Todos
 
 - Improve URL metadata retrieval.
-- Support canvas, memo and other views.
+- Improve URL locating and locking.
+- Support other views.
+- Add URL favorites.
 - Add URLs to note footer as footlinks.
-- Add lock the view feature.
 
 ## Thanks
 

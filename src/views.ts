@@ -30,7 +30,7 @@ export class UrlDisplayView extends ItemView {
 
 	public override async onOpen() {
 		this.drawNavHead(this.contentEl); 
-		console.log("open", this.plugin.settings.lockUrl)
+
 		if (this.plugin.settings.lockUrl) {
 			this.processor.activeNoteUrlParse = this.plugin.settings.lockUrl;
 			const navContent = this.contentEl.children[1];
@@ -42,7 +42,7 @@ export class UrlDisplayView extends ItemView {
 		}
 	}
 
-	public readonly onPaneMenu = (menu: Menu): void => {
+	public readonly onPaneMenu = (menu: Menu, source: string): void => {
 		// source: sidebar-context-menu
 		menu
 			.addItem((item) => {
@@ -59,7 +59,7 @@ export class UrlDisplayView extends ItemView {
 
 		// add icon for refresh
 		const navActionButtonRefresh = navButtonContainer.createDiv("clickable-icon nav-action-button");
-		navActionButtonRefresh.ariaLabel = t('Refresh URL pane');
+		navActionButtonRefresh.ariaLabel = t('Refresh URL list');
 		setIcon(navActionButtonRefresh, "refresh-cw");
 
 		navActionButtonRefresh.addEventListener("click", (event: MouseEvent) => {
@@ -69,7 +69,7 @@ export class UrlDisplayView extends ItemView {
 
 		// add icon to lock the view (remains unchanged)
 		const navActionButtonLock = navButtonContainer.createDiv("clickable-icon nav-action-button url-dispaly-lock");
-		navActionButtonLock.ariaLabel = t('Lock URL pane');
+		navActionButtonLock.ariaLabel = t('Lock URL list');
 
 		if (this.plugin.settings.lockUrl) {
 			setIcon(navActionButtonLock, "lock");	
@@ -111,23 +111,18 @@ export class UrlDisplayView extends ItemView {
 		navContent.empty();
 
 		if (!SUPPORTED_VIEW_TYPE.includes(this.processor.activeViewType)) {
-			console.log(1)
 			navContent.createDiv({ cls: 'pane-empty',  text: t('No support')});
 		}
 		else if (!this.processor.isExtracting && !this.processor.activeNotehaveUrl) {
-			console.log(2)
 			navContent.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 		else if (this.processor.isExtracting || this.processor.isParsing) {
-			console.log(3)
 			this.isParsing(navContent);
 		}
 		else if (!this.processor.isParsing && this.processor.activeNoteUrlParse?.length !== 0) {
-			console.log(4)
 			this.updateList(navContent);
 		}
 		else {
-			console.log(0)
 			navContent.createDiv({ cls: 'pane-empty',  text: t('No found')});
 		}
 	}
@@ -162,7 +157,6 @@ export class UrlDisplayView extends ItemView {
 				
 				// hover link preview
 				if (this.plugin.settings.hoverLinkPreview) {
-					// navUrlItem.ariaLabel = currentUrl.link;
 					navUrlItem.setAttribute('aria-label', currentUrl.link);
 				}
 
@@ -189,10 +183,12 @@ export class UrlDisplayView extends ItemView {
 					setIcon(navUrlItem, "globe");
 				}
 
-				navUrlItem.createSpan({
-					text: this.plugin.settings.useAlias && currentUrl.alias.trim() !== "" ? currentUrl.alias :
-						(currentUrl.title ? currentUrl.title : t('Untitled')),
-				});
+				// show text 
+				if (!this.plugin.settings.useAlias) {
+					navUrlItem.createSpan({ text: currentUrl.title ? currentUrl.title : t('Untitled')})
+				} else {
+					navUrlItem.createSpan({ text: currentUrl.alias ? currentUrl.alias : t('Alias-free')})
+				}
 
 				const navUrlItemNavigation = getIcon("navigation") as Element;
 				navUrlItem.appendChild(navUrlItemNavigation);
@@ -261,7 +257,7 @@ export class UrlDisplayView extends ItemView {
 				.setTitle(t('Copy item'))
 				.setIcon("copy")
 				.onClick((event: PointerEvent) => {
-					const copyLink = delegatedElement.getAttribute('data-link');
+					const copyLink = delegatedElement.getAttribute('data-link') as string;
 					if (this.plugin.settings.copyFormat === "inlineLink") {
 						if (this.plugin.settings.useAlias) {
 							const copyLink = delegatedElement.getAttribute('data-link');
@@ -272,7 +268,7 @@ export class UrlDisplayView extends ItemView {
 							navigator.clipboard.writeText(`[${copyTitle}](${copyLink})`);
 						}
 					} else {
-						navigator.clipboard.writeText(copyLink!);
+						navigator.clipboard.writeText(copyLink);
 					}
 					new Notice(t('Copy notice'));
 				})
@@ -289,10 +285,10 @@ export class UrlDisplayView extends ItemView {
 						const searchText = searchUrl.replace(/https?:\/\//, '');
 						// this.plugin.app.workspace.setActiveLeaf(leaf); --- use this can't reveal pane if the pane hided
 						this.app.workspace.revealLeaf(leaf);
-						let inputSearch = document.querySelector('input[type="search"]') as HTMLInputElement;
+						const inputSearch = document.querySelector('input[type="search"]') as HTMLInputElement;
 						if (inputSearch) {
 							inputSearch.value = searchText;
-							let searchEvent = new Event('input');
+							const searchEvent = new Event('input');
 							inputSearch.dispatchEvent(searchEvent);
 						}
 					} else {

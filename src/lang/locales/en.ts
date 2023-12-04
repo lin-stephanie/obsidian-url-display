@@ -41,13 +41,15 @@ export default {
 	"failed": "failed",
 	"both": "both",
 
-	/* pane */
-	"Refresh URL pane": "Refresh URL pane",
-	"Lock URL pane": "Lock URL pane",
+	/* view */
+	"Refresh URL list": "Refresh URL list",
+	"Lock URL list": "Lock URL list",
 
 	"No support": "Extraction of URLs from this type of view is not supported.",
 	"No found": "No valid URLs found.",
+
 	"Untitled": "Untitled",
+	"Alias-free": "Alias-free",
 
 	"Copy item": "Copy URL",
 	"Search item": "Search for URL",

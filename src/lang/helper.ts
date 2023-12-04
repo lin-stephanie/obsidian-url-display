@@ -50,20 +50,17 @@ const localeMap: { [k: string]: Partial<typeof en> } = {
   'zh-tw': zhTW,
 };
 
-
 // const lang = window.localStorage.getItem("language");
 // const locale = localeMap[lang || "en"];
 const locale = localeMap[moment.locale()];
 
 export function t(str: keyof typeof en, vars?: { [key: string]: string | number }): string {
 	let translation = (locale && locale[str]) || en[str];
-  
 	if (vars) {
-	  Object.keys(vars).forEach(key => {
-		const value = vars[key];
-		translation = translation.replace(new RegExp(`{${key}}`, 'g'), value.toString());
-	  });
+		Object.keys(vars).forEach(key => {
+			const value = vars[key];
+			translation = translation.replace(new RegExp(`{${key}}`, 'g'), value.toString());
+		});
 	}
-  
 	return translation;
 }

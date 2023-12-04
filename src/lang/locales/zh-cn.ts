@@ -42,12 +42,14 @@ export default {
 	"both": "都需要",
 
 	/* pene */
-	"Refresh URL pane": "刷新 URL 面板",
-	"Lock URL pane": "锁定 URL 面板",
+	"Refresh URL list": "刷新 URL 列表",
+	"Lock URL list": "锁定 URL 列表",
 
 	"No support": "不支持提取该视图类型中的 URL。",
 	"No found": "未找到有效的 URL。",
+
 	"Untitled": "无标题",
+	"Alias-free": "无别名",
 
 	"Copy item": "复制 URL",
 	"Search item": "查找 URL",

@@ -28,11 +28,11 @@ export class markdownProcessor {
 	}
 
 	public readonly process = debounce(async (view: FileView) => {
-		console.log("view", view)
-		console.log("view type", view.getViewType())
-		console.log("view file", view.file)
-		console.log("path", view.file?.path);
-		console.log("lockUrl", this.plugin.settings.lockUrl)
+		// console.log("view", view)
+		// console.log("view type", view.getViewType())
+		// console.log("view file", view.file)
+		// console.log("path", view.file?.path);
+		// console.log("lockUrl", this.plugin.settings.lockUrl)
 
 		this.initState();
 		this.activeView = view;
@@ -41,45 +41,35 @@ export class markdownProcessor {
 		if (this.plugin.settings.lockUrl) return;
 
 		if (this.activeView && SUPPORTED_VIEW_TYPE.includes(this.activeViewType)) {
-			if (this.plugin.settings.lockUrl) {
-				console.log("lockUrl", this.plugin.settings.lockUrl)
-				return;
-			} else {
-				// start extracting
-				this.isExtracting = true;
-				this.updateView();
-				const activeNoteUrl = await this.extractUrl(this.activeView.file);
-				this.isExtracting = false;
+			// start extracting
+			this.isExtracting = true;
+			this.updateView();
+			const activeNoteUrl = await this.extractUrl(this.activeView.file);
+			this.isExtracting = false;
 
-				if (!activeNoteUrl) {
-					this.activeNotehaveUrl = false;
-					this.updateView();
-				} else {
-					this.activeNotehaveUrl = true;
-					// start parsing
-					this.isParsing = true;
-					this.updateView();
-					this.activeNoteUrlParse = await this.parseUrl(this.activeView);
-					this.isParsing = false;
-					console.log(this.activeNoteUrlParse)
-
-					// if currentView is not null, it means that the user is switching md, need to judged to avoid race conditions
-					// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
-					const currentView = this.plugin.app.workspace.getActiveFileView();
-					console.log("new", currentView.file?.path)
-					console.log("old", view.file?.path)
-					if (currentView.file?.path === view.file?.path) {
-						this.updateView();
-					} 
-				}
-			} 
-		} else {
-			if (this.plugin.settings.lockUrl) {
-				return;
-			} else {
-				console.log("else")
+			if (!activeNoteUrl) {
+				this.activeNotehaveUrl = false;
 				this.updateView();
+			} else {
+				this.activeNotehaveUrl = true;
+				// start parsing
+				this.isParsing = true;
+				this.updateView();
+				this.activeNoteUrlParse = await this.parseUrl(this.activeView);
+				this.isParsing = false;
+				// console.log(this.activeNoteUrlParse)
+
+				// if currentView is not null, it means that the user is switching md, need to judged to avoid race conditions
+				// WARN: cannot use this.activeView(the reference has changed) but view(the reference in the closure)
+				const currentView = this.plugin.app.workspace.getActiveFileView();
+				// console.log("new", currentView.file?.path)
+				// console.log("old", view.file?.path)
+				if (currentView.file?.path === view.file?.path) {
+					this.updateView();
+				} 
 			}
+		} else {
+			this.updateView();
 		}
 		
 	}, 1000, true)

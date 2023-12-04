@@ -1,4 +1,4 @@
-import { Notice, Plugin } from "obsidian";
+import { Plugin } from "obsidian";
 
 import { UrlDisplaySettingTab } from './settings'
 import { UrlDisplayView } from "./views"
@@ -12,7 +12,7 @@ export default class UrlDisplayPlugin extends Plugin {
 	public processor: markdownProcessor;
 
 	public override async onload() {
-		console.clear();
+		// console.clear();
 		console.log("loading obsidian-url-display plugin v" + this.manifest.version);
 
 		await this.loadSettings();
@@ -51,8 +51,8 @@ export default class UrlDisplayPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'refresh-url-pane',
-			name: t('Refresh URL pane'),
+			id: 'refresh-url-list',
+			name: t('Refresh URL list'),
 			checkCallback: (checking: boolean) => {
 				const fileView = this.app.workspace.getActiveFileView(); 
 				const urlDisplayView = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];

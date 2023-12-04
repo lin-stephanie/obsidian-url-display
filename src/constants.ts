@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS: UrlDisplaySettings = {
 	cacheMode: 'diskCache',
 	noticeMode: 'none',
 	lockPath: '',
-	lockUrl: [],
+	lockUrl: null,
 }
 
 export const SUPPORTED_VIEW_TYPE: string[] = ["markdown", "kanban"]
